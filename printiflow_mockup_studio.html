@@ -1,0 +1,1071 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Printiflow — Mockup Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #111010;
+  --surface: #1a1918;
+  --card: #222120;
+  --border: #333230;
+  --accent: #ff3c00;
+  --accent2: #ffb800;
+  --green: #00e676;
+  --purple: #9c27b0;
+  --text: #f0ede8;
+  --muted: #7a7570;
+  --white: #ffffff;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* Header */
+.header{background:var(--surface);border-bottom:1px solid var(--border);padding:1rem 2rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;}
+.logo-wrap{display:flex;align-items:center;gap:.8rem;}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:.1em;color:var(--accent);}
+.logo-sub{font-size:.7rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;}
+.header-badge{display:flex;gap:.5rem;flex-wrap:wrap;}
+.badge{font-size:.65rem;font-weight:700;font-family:'Syne',sans-serif;letter-spacing:.08em;text-transform:uppercase;padding:.25rem .7rem;border-radius:999px;}
+.badge-orange{background:rgba(255,60,0,.15);color:var(--accent);border:1px solid rgba(255,60,0,.3);}
+.badge-yellow{background:rgba(255,184,0,.15);color:var(--accent2);border:1px solid rgba(255,184,0,.3);}
+.badge-green{background:rgba(0,230,118,.1);color:var(--green);border:1px solid rgba(0,230,118,.25);}
+
+/* Nav tabs */
+.nav{display:flex;gap:0;background:var(--surface);border-bottom:1px solid var(--border);overflow-x:auto;}
+.nav-btn{font-family:'Syne',sans-serif;font-weight:700;font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;padding:.9rem 1.5rem;border:none;background:transparent;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;transition:all .2s;white-space:nowrap;display:flex;align-items:center;gap:.5rem;}
+.nav-btn:hover{color:var(--text);}
+.nav-btn.active{color:var(--accent);border-bottom-color:var(--accent);}
+
+/* Main layout */
+.main{display:grid;grid-template-columns:340px 1fr;min-height:calc(100vh - 110px);}
+.sidebar{background:var(--surface);border-right:1px solid var(--border);padding:1.5rem;overflow-y:auto;max-height:calc(100vh - 110px);}
+.preview-pane{background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:2rem;gap:1.5rem;overflow-y:auto;}
+
+/* Section titles */
+.sec-title{font-family:'Syne',sans-serif;font-size:.75rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:.8rem;margin-top:1.2rem;}
+.sec-title:first-child{margin-top:0;}
+
+/* Upload zones */
+.upload-zone{border:2px dashed var(--border);border-radius:12px;padding:1.5rem;text-align:center;cursor:pointer;transition:all .2s;position:relative;background:rgba(255,255,255,.02);}
+.upload-zone:hover{border-color:var(--accent);background:rgba(255,60,0,.04);}
+.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.upload-zone .uz-icon{font-size:2rem;margin-bottom:.5rem;}
+.upload-zone p{font-size:.8rem;color:var(--muted);line-height:1.5;}
+.upload-zone strong{color:var(--accent);}
+.upload-preview{margin-top:1rem;display:none;}
+.upload-preview img{width:100%;max-height:120px;object-fit:contain;border-radius:8px;border:1px solid var(--border);}
+.upload-thumb-row{display:flex;align-items:center;gap:.8rem;padding:.7rem;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:8px;margin-top:.8rem;}
+.upload-thumb-row img{width:48px;height:48px;object-fit:cover;border-radius:6px;}
+.upload-thumb-info{flex:1;min-width:0;}
+.upload-thumb-info .fn{font-size:.78rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.upload-thumb-info .fs{font-size:.7rem;color:var(--green);}
+.btn-remove-sm{font-size:.7rem;color:var(--accent);background:none;border:1px solid rgba(255,60,0,.3);border-radius:999px;cursor:pointer;padding:.2rem .6rem;transition:all .15s;}
+.btn-remove-sm:hover{background:var(--accent);color:white;}
+
+/* Color swatches */
+.colors{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.5rem;}
+.color-swatch{width:32px;height:32px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:all .15s;}
+.color-swatch.active{border-color:var(--accent);transform:scale(1.1);}
+.color-swatch:hover{transform:scale(1.05);}
+
+/* Sliders */
+.slider-row{display:flex;align-items:center;gap:.8rem;margin-bottom:.6rem;}
+.slider-row label{font-size:.75rem;color:var(--muted);width:80px;flex-shrink:0;}
+.slider-row input[type=range]{flex:1;accent-color:var(--accent);}
+.slider-row span{font-size:.75rem;color:var(--text);width:35px;text-align:right;}
+
+/* Select */
+.field-select{width:100%;padding:.55rem .8rem;background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.85rem;outline:none;cursor:pointer;margin-bottom:.8rem;}
+.field-select:focus{border-color:var(--accent);}
+.field-input{width:100%;padding:.55rem .8rem;background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.85rem;outline:none;margin-bottom:.8rem;}
+.field-input:focus{border-color:var(--accent);}
+.field-input::placeholder{color:var(--muted);}
+textarea.field-input{min-height:70px;resize:vertical;}
+
+/* Buttons */
+.btn{font-family:'Syne',sans-serif;font-weight:700;font-size:.78rem;letter-spacing:.07em;text-transform:uppercase;padding:.65rem 1.2rem;border-radius:8px;border:none;cursor:pointer;transition:all .18s;display:inline-flex;align-items:center;gap:.4rem;}
+.btn-primary{background:var(--accent);color:white;}
+.btn-primary:hover{background:#e03500;}
+.btn-secondary{background:var(--card);color:var(--text);border:1px solid var(--border);}
+.btn-secondary:hover{border-color:var(--accent);color:var(--accent);}
+.btn-yellow{background:var(--accent2);color:#111;}
+.btn-yellow:hover{background:#e6a600;}
+.btn-green{background:var(--green);color:#111;}
+.btn-green:hover{background:#00c060;}
+.btn-full{width:100%;}
+.btn-row{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:1rem;}
+
+/* Canvas preview */
+#mockup-canvas{border-radius:12px;max-width:100%;box-shadow:0 20px 60px rgba(0,0,0,.5);display:block;}
+.canvas-wrap{position:relative;display:inline-block;}
+.canvas-wrap .gen-overlay{position:absolute;inset:0;background:rgba(17,16,16,.9);border-radius:12px;display:none;align-items:center;justify-content:center;flex-direction:column;gap:1rem;}
+.spin{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* Preview placeholder */
+.preview-placeholder{width:500px;max-width:100%;height:500px;border:2px dashed var(--border);border-radius:16px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1rem;color:var(--muted);}
+.preview-placeholder .ph-icon{font-size:3rem;opacity:.4;}
+.preview-placeholder p{font-size:.85rem;opacity:.6;}
+
+/* Download bar */
+.download-bar{display:flex;gap:.8rem;flex-wrap:wrap;justify-content:center;}
+
+/* IG templates grid */
+.ig-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:.6rem;margin-bottom:1rem;}
+.ig-tpl{border:2px solid var(--border);border-radius:8px;padding:.6rem;cursor:pointer;text-align:center;transition:all .18s;background:var(--card);}
+.ig-tpl:hover{border-color:var(--accent2);}
+.ig-tpl.active{border-color:var(--accent2);background:rgba(255,184,0,.08);}
+.ig-tpl .tpl-preview{width:100%;aspect-ratio:1;border-radius:6px;margin-bottom:.4rem;display:flex;align-items:center;justify-content:center;font-size:1.5rem;}
+.ig-tpl span{font-size:.7rem;font-weight:600;color:var(--muted);}
+
+/* Remove.bg section */
+.api-info{background:rgba(255,184,0,.07);border:1px solid rgba(255,184,0,.2);border-radius:10px;padding:.9rem;font-size:.78rem;line-height:1.7;color:var(--accent2);margin-bottom:1rem;}
+.api-info a{color:var(--accent2);}
+.result-compare{display:grid;grid-template-columns:1fr 1fr;gap:1rem;width:100%;max-width:600px;}
+.result-compare .rc-box{text-align:center;}
+.result-compare .rc-box p{font-size:.72rem;color:var(--muted);margin-bottom:.4rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;}
+.result-compare .rc-box img{width:100%;border-radius:8px;border:1px solid var(--border);}
+
+/* Section panels */
+.section{display:none;}
+.section.active{display:contents;}
+
+/* Canva section */
+.canva-options{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin-bottom:1rem;}
+.canva-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1rem;cursor:pointer;transition:all .18s;text-align:center;}
+.canva-card:hover{border-color:#7c3aed;background:rgba(124,58,237,.08);}
+.canva-card .cc-icon{font-size:1.8rem;margin-bottom:.4rem;}
+.canva-card h4{font-size:.82rem;font-weight:700;font-family:'Syne',sans-serif;margin-bottom:.2rem;}
+.canva-card p{font-size:.7rem;color:var(--muted);}
+
+/* Responsive */
+@media(max-width:768px){
+  .main{grid-template-columns:1fr;}
+  .sidebar{max-height:none;border-right:none;border-bottom:1px solid var(--border);}
+  .preview-pane{padding:1rem;}
+  .result-compare{grid-template-columns:1fr;}
+  .canva-options{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo-wrap">
+    <div>
+      <div class="logo">Printiflow</div>
+      <div class="logo-sub">Mockup Studio</div>
+    </div>
+  </div>
+  <div class="header-badge">
+    <span class="badge badge-orange">👕 Mockup DTF</span>
+    <span class="badge badge-yellow">🏳️ Fondo Blanco</span>
+    <span class="badge badge-green">📱 Instagram</span>
+  </div>
+</div>
+
+<div class="nav">
+  <button class="nav-btn active" onclick="switchTab('mockup')" id="nb-mockup">👕 Mockup Generator</button>
+  <button class="nav-btn" onclick="switchTab('bg')" id="nb-bg">🏳️ Fondo Blanco</button>
+  <button class="nav-btn" onclick="switchTab('ig')" id="nb-ig">📱 Post Instagram</button>
+  <button class="nav-btn" onclick="switchTab('canva')" id="nb-canva">🎨 Exportar a Canva</button>
+</div>
+
+<div class="main">
+
+  <!-- ═══════════════════════════════════ SIDEBAR ═══════════════════════════════════ -->
+  <div class="sidebar">
+
+    <!-- MOCKUP TAB SIDEBAR -->
+    <div id="sb-mockup">
+      <div class="sec-title">1. Tu diseño DTF</div>
+      <div class="upload-zone" id="design-zone">
+        <input type="file" id="design-input" accept="image/png,image/jpeg,image/webp" onchange="handleDesignUpload(event)">
+        <div class="uz-icon">🎨</div>
+        <p>Subí tu diseño DTF<br><strong>PNG transparente recomendado</strong></p>
+      </div>
+      <div id="design-thumb" class="upload-thumb-row" style="display:none;">
+        <img id="design-img-prev" src="" alt="">
+        <div class="upload-thumb-info">
+          <div class="fn" id="design-fname">—</div>
+          <div class="fs">✓ Diseño cargado</div>
+        </div>
+        <button class="btn-remove-sm" onclick="removeDesign()">✕</button>
+      </div>
+
+      <div class="sec-title">2. Tipo de prenda</div>
+      <select class="field-select" id="garment-type" onchange="renderMockup()">
+        <option value="tshirt">👕 Remera manga corta</option>
+        <option value="hoodie">🧥 Buzo con capucha</option>
+      </select>
+
+      <div class="sec-title">3. Color de prenda</div>
+      <div class="colors" id="color-swatches">
+        <div class="color-swatch active" style="background:#ffffff;box-shadow:0 0 0 1px #555;" data-color="#ffffff" onclick="setGarmentColor(this,'#ffffff')" title="Blanco"></div>
+        <div class="color-swatch" style="background:#1a1a1a;" data-color="#1a1a1a" onclick="setGarmentColor(this,'#1a1a1a')" title="Negro"></div>
+        <div class="color-swatch" style="background:#374151;" data-color="#374151" onclick="setGarmentColor(this,'#374151')" title="Gris oscuro"></div>
+        <div class="color-swatch" style="background:#9ca3af;" data-color="#9ca3af" onclick="setGarmentColor(this,'#9ca3af')" title="Gris claro"></div>
+        <div class="color-swatch" style="background:#1e3a5f;" data-color="#1e3a5f" onclick="setGarmentColor(this,'#1e3a5f')" title="Azul marino"></div>
+        <div class="color-swatch" style="background:#1d4ed8;" data-color="#1d4ed8" onclick="setGarmentColor(this,'#1d4ed8')" title="Azul"></div>
+        <div class="color-swatch" style="background:#dc2626;" data-color="#dc2626" onclick="setGarmentColor(this,'#dc2626')" title="Rojo"></div>
+        <div class="color-swatch" style="background:#16a34a;" data-color="#16a34a" onclick="setGarmentColor(this,'#16a34a')" title="Verde"></div>
+        <div class="color-swatch" style="background:#854d0e;" data-color="#854d0e" onclick="setGarmentColor(this,'#854d0e')" title="Marrón"></div>
+        <div class="color-swatch" style="background:#7c3aed;" data-color="#7c3aed" onclick="setGarmentColor(this,'#7c3aed')" title="Violeta"></div>
+        <div class="color-swatch" style="background:#ea580c;" data-color="#ea580c" onclick="setGarmentColor(this,'#ea580c')" title="Naranja"></div>
+        <div class="color-swatch" style="background:#be185d;" data-color="#be185d" onclick="setGarmentColor(this,'#be185d')" title="Rosa"></div>
+      </div>
+
+      <div class="sec-title">4. Posición y tamaño del diseño</div>
+      <div class="slider-row">
+        <label>Tamaño</label>
+        <input type="range" id="design-size" min="10" max="70" value="38" oninput="updateVal('design-size','sz-val');renderMockup()">
+        <span id="sz-val">38%</span>
+      </div>
+      <div class="slider-row">
+        <label>Posición Y</label>
+        <input type="range" id="design-y" min="20" max="70" value="35" oninput="updateVal('design-y','dy-val');renderMockup()">
+        <span id="dy-val">35%</span>
+      </div>
+      <div class="slider-row">
+        <label>Posición X</label>
+        <input type="range" id="design-x" min="20" max="80" value="50" oninput="updateVal('design-x','dx-val');renderMockup()">
+        <span id="dx-val">50%</span>
+      </div>
+
+      <div class="sec-title">5. Fondo del mockup</div>
+      <select class="field-select" id="bg-type" onchange="renderMockup()">
+        <option value="white">Blanco (Mercado Libre)</option>
+        <option value="light">Gris claro</option>
+        <option value="dark">Oscuro / Studio</option>
+        <option value="gradient">Degradado naranja</option>
+        <option value="transparent">Transparente (PNG)</option>
+      </select>
+
+      <div class="btn-row">
+        <button class="btn btn-primary btn-full" onclick="renderMockup()">🔄 Actualizar mockup</button>
+      </div>
+    </div>
+
+    <!-- BG REMOVER SIDEBAR -->
+    <div id="sb-bg" style="display:none;">
+      <div class="sec-title">Tu foto de producto</div>
+      <div class="upload-zone" id="bg-zone">
+        <input type="file" id="bg-input" accept="image/jpeg,image/png,image/webp" onchange="handleBgUpload(event)">
+        <div class="uz-icon">📷</div>
+        <p>Subí la foto de tu producto<br><strong>JPG o PNG, máx 5MB</strong></p>
+      </div>
+      <div id="bg-thumb" class="upload-thumb-row" style="display:none;">
+        <img id="bg-img-prev" src="" alt="">
+        <div class="upload-thumb-info">
+          <div class="fn" id="bg-fname">—</div>
+          <div class="fs">✓ Imagen cargada</div>
+        </div>
+        <button class="btn-remove-sm" onclick="removeBgImg()">✕</button>
+      </div>
+
+      <div class="sec-title">API Key de Remove.bg</div>
+      <div class="api-info">
+        🔑 Remove.bg es <strong>100% gratis</strong> hasta 50 imágenes/mes.<br>
+        1. Entrá a <a href="https://www.remove.bg/es/api" target="_blank">remove.bg/api</a><br>
+        2. Creá cuenta gratis<br>
+        3. Copiá tu API key y pegala acá
+      </div>
+      <input type="text" class="field-input" id="removebg-key" placeholder="Tu API key de remove.bg...">
+
+      <div class="sec-title">Color de fondo resultado</div>
+      <select class="field-select" id="bg-result-color">
+        <option value="white">Blanco puro (ML)</option>
+        <option value="transparent">Transparente (PNG)</option>
+        <option value="light-gray">Gris claro</option>
+      </select>
+
+      <div class="btn-row">
+        <button class="btn btn-primary btn-full" onclick="removeBackground()">🏳️ Quitar fondo</button>
+      </div>
+    </div>
+
+    <!-- INSTAGRAM SIDEBAR -->
+    <div id="sb-ig" style="display:none;">
+      <div class="sec-title">Tu foto de producto</div>
+      <div class="upload-zone" id="ig-zone">
+        <input type="file" id="ig-input" accept="image/jpeg,image/png,image/webp" onchange="handleIgUpload(event)">
+        <div class="uz-icon">📱</div>
+        <p>Subí la foto de tu producto<br><strong>La mantenemos igual</strong></p>
+      </div>
+      <div id="ig-thumb" class="upload-thumb-row" style="display:none;">
+        <img id="ig-img-prev" src="" alt="">
+        <div class="upload-thumb-info">
+          <div class="fn" id="ig-fname">—</div>
+          <div class="fs">✓ Foto cargada</div>
+        </div>
+        <button class="btn-remove-sm" onclick="removeIgImg()">✕</button>
+      </div>
+
+      <div class="sec-title">Plantilla de post</div>
+      <div class="ig-grid">
+        <div class="ig-tpl active" onclick="selectIgTpl(this,'minimal')" data-tpl="minimal">
+          <div class="tpl-preview" style="background:linear-gradient(135deg,#fff,#f0f0f0);">🏳️</div>
+          <span>Minimalista</span>
+        </div>
+        <div class="ig-tpl" onclick="selectIgTpl(this,'bold')" data-tpl="bold">
+          <div class="tpl-preview" style="background:linear-gradient(135deg,#ff3c00,#ff6b00);">🔥</div>
+          <span>Bold / Promo</span>
+        </div>
+        <div class="ig-tpl" onclick="selectIgTpl(this,'dark')" data-tpl="dark">
+          <div class="tpl-preview" style="background:linear-gradient(135deg,#111,#222);">⚫</div>
+          <span>Dark Premium</span>
+        </div>
+        <div class="ig-tpl" onclick="selectIgTpl(this,'yellow')" data-tpl="yellow">
+          <div class="tpl-preview" style="background:linear-gradient(135deg,#ffb800,#ff8c00);">⭐</div>
+          <span>Destacado</span>
+        </div>
+      </div>
+
+      <div class="sec-title">Texto del post</div>
+      <input type="text" class="field-input" id="ig-title" placeholder="Título (ej: NUEVO DISEÑO)">
+      <input type="text" class="field-input" id="ig-subtitle" placeholder="Subtítulo (ej: Remeras DTF desde $X)">
+      <input type="text" class="field-input" id="ig-cta" placeholder="CTA (ej: ¡Pedí el tuyo! 🔥)">
+      <input type="text" class="field-input" id="ig-handle" placeholder="@tu_usuario">
+
+      <div class="btn-row">
+        <button class="btn btn-yellow btn-full" onclick="generateIgPost()">📱 Generar post</button>
+      </div>
+    </div>
+
+    <!-- CANVA SIDEBAR -->
+    <div id="sb-canva" style="display:none;">
+      <div class="sec-title">Exportar a Canva</div>
+      <p style="font-size:.82rem;color:var(--muted);line-height:1.7;margin-bottom:1rem;">Descargá tu imagen y abrí Canva para el toque final. También podemos crear diseños directamente desde acá.</p>
+
+      <div class="canva-options">
+        <div class="canva-card" onclick="createCanvaPost('instagram_post')">
+          <div class="cc-icon">📱</div>
+          <h4>Post Instagram</h4>
+          <p>1080×1080 px</p>
+        </div>
+        <div class="canva-card" onclick="createCanvaPost('instagram_post')">
+          <div class="cc-icon">🛒</div>
+          <h4>Foto ML</h4>
+          <p>1200×1200 px</p>
+        </div>
+        <div class="canva-card" onclick="createCanvaPost('your_story')">
+          <div class="cc-icon">📖</div>
+          <h4>Story</h4>
+          <p>1080×1920 px</p>
+        </div>
+        <div class="canva-card" onclick="createCanvaPost('flyer')">
+          <div class="cc-icon">🗒️</div>
+          <h4>Flyer</h4>
+          <p>A4 / Print</p>
+        </div>
+      </div>
+
+      <div class="sec-title">Descripción para Canva</div>
+      <textarea class="field-input" id="canva-prompt" placeholder="Describí el diseño que querés crear en Canva...">Post de Instagram para remera DTF con diseño colorido, fondo blanco, estilo moderno y juvenil para Printiflow</textarea>
+
+      <div class="btn-row">
+        <button class="btn btn-primary btn-full" onclick="generateCanvaDesign()">🎨 Crear en Canva</button>
+      </div>
+
+      <div style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border);">
+        <div class="sec-title">O descargá tu resultado</div>
+        <p style="font-size:.78rem;color:var(--muted);margin-bottom:.8rem;">Primero generá un mockup o post y después descargalo para importar a Canva.</p>
+        <button class="btn btn-secondary btn-full" onclick="downloadCurrentResult('jpg')">⬇️ Descargar JPG</button>
+        <div style="height:.5rem;"></div>
+        <button class="btn btn-secondary btn-full" onclick="downloadCurrentResult('png')">⬇️ Descargar PNG</button>
+      </div>
+    </div>
+
+  </div><!-- /sidebar -->
+
+  <!-- ═══════════════════════════════════ PREVIEW ═══════════════════════════════════ -->
+  <div class="preview-pane" id="preview-pane">
+
+    <!-- MOCKUP PREVIEW -->
+    <div id="pv-mockup" style="width:100%;display:flex;flex-direction:column;align-items:center;gap:1.5rem;">
+      <div class="canvas-wrap">
+        <canvas id="mockup-canvas" width="600" height="600"></canvas>
+        <div class="gen-overlay" id="mockup-overlay">
+          <div class="spin"></div>
+          <p style="font-size:.82rem;color:var(--muted);">Generando mockup...</p>
+        </div>
+      </div>
+      <div class="download-bar">
+        <button class="btn btn-green" onclick="downloadMockup('jpg')">⬇️ JPG</button>
+        <button class="btn btn-green" onclick="downloadMockup('png')">⬇️ PNG Transparente</button>
+        <button class="btn btn-secondary" onclick="switchTab('canva')">🎨 Exportar a Canva</button>
+      </div>
+    </div>
+
+    <!-- BG PREVIEW -->
+    <div id="pv-bg" style="display:none;width:100%;flex-direction:column;align-items:center;gap:1.5rem;">
+      <div id="bg-loading" style="display:none;flex-direction:column;align-items:center;gap:1rem;">
+        <div class="spin"></div>
+        <p style="font-size:.82rem;color:var(--muted);">Quitando fondo...</p>
+      </div>
+      <div class="result-compare" id="bg-compare" style="display:none;">
+        <div class="rc-box">
+          <p>Original</p>
+          <img id="bg-orig-img" src="" alt="">
+        </div>
+        <div class="rc-box">
+          <p>Sin fondo ✨</p>
+          <img id="bg-result-img" src="" alt="" style="background:repeating-conic-gradient(#333 0% 25%, #444 0% 50%) 0 0 / 16px 16px;">
+        </div>
+      </div>
+      <div class="preview-placeholder" id="bg-placeholder">
+        <div class="ph-icon">🏳️</div>
+        <p>Subí tu foto y usá tu API key de Remove.bg</p>
+      </div>
+      <div class="download-bar" id="bg-dl-bar" style="display:none;">
+        <button class="btn btn-green" onclick="downloadBgResult('jpg')">⬇️ JPG</button>
+        <button class="btn btn-green" onclick="downloadBgResult('png')">⬇️ PNG Sin fondo</button>
+      </div>
+    </div>
+
+    <!-- INSTAGRAM PREVIEW -->
+    <div id="pv-ig" style="display:none;width:100%;flex-direction:column;align-items:center;gap:1.5rem;">
+      <canvas id="ig-canvas" width="1080" height="1080" style="max-width:500px;width:100%;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.5);display:block;"></canvas>
+      <div class="download-bar">
+        <button class="btn btn-yellow" onclick="downloadIg('jpg')">⬇️ Descargar JPG</button>
+        <button class="btn btn-secondary" onclick="switchTab('canva')">🎨 Exportar a Canva</button>
+      </div>
+    </div>
+
+    <!-- CANVA PREVIEW -->
+    <div id="pv-canva" style="display:none;width:100%;flex-direction:column;align-items:center;gap:1.5rem;">
+      <div class="preview-placeholder">
+        <div class="ph-icon">🎨</div>
+        <p>Elegí un formato y creamos el diseño en Canva</p>
+      </div>
+    </div>
+
+  </div><!-- /preview-pane -->
+</div>
+
+<script src="https://js.puter.com/v2/"></script>
+<script>
+// ═══════════════════════════ STATE ═══════════════════════════
+let currentTab = 'mockup';
+let garmentColor = '#ffffff';
+let designImg = null;
+let bgOrigBlob = null, bgResultBlob = null;
+let igProductImg = null;
+let igTemplate = 'minimal';
+let lastCanvas = null;
+let lastCanvasId = 'mockup-canvas';
+
+// ═══════════════════════════ NAV ═══════════════════════════
+function switchTab(tab){
+  currentTab = tab;
+  ['mockup','bg','ig','canva'].forEach(t=>{
+    document.getElementById('nb-'+t).classList.toggle('active', t===tab);
+    document.getElementById('sb-'+t).style.display = t===tab ? 'block' : 'none';
+    document.getElementById('pv-'+t).style.display = t===tab ? 'flex' : 'none';
+  });
+}
+
+// ═══════════════════════════ UTILS ═══════════════════════════
+function updateVal(sliderId, spanId){
+  document.getElementById(spanId).textContent = document.getElementById(sliderId).value + '%';
+}
+
+function hexToRgb(hex){
+  const r = parseInt(hex.slice(1,3),16);
+  const g = parseInt(hex.slice(3,5),16);
+  const b = parseInt(hex.slice(5,7),16);
+  return {r,g,b};
+}
+
+function isDark(hex){
+  const {r,g,b} = hexToRgb(hex);
+  return (r*299 + g*587 + b*114) / 1000 < 128;
+}
+
+async function loadImage(src){
+  return new Promise((res,rej)=>{
+    const img = new Image();
+    img.crossOrigin='anonymous';
+    img.onload=()=>res(img);
+    img.onerror=rej;
+    img.src=src;
+  });
+}
+
+function downloadCanvas(canvasId, fmt, filename){
+  const cv = document.getElementById(canvasId);
+  const mime = fmt==='png'?'image/png':'image/jpeg';
+  const dataUrl = cv.toDataURL(mime, 0.95);
+  const a = document.createElement('a');
+  a.href=dataUrl; a.download=filename+'.'+fmt; a.click();
+}
+
+// ═══════════════════════════ MOCKUP ═══════════════════════════
+function handleDesignUpload(e){
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const img = new Image();
+    img.onload = () => { designImg = img; renderMockup(); };
+    img.src = ev.target.result;
+    document.getElementById('design-fname').textContent = file.name;
+    document.getElementById('design-img-prev').src = ev.target.result;
+    document.getElementById('design-thumb').style.display='flex';
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeDesign(){
+  designImg=null;
+  document.getElementById('design-thumb').style.display='none';
+  document.getElementById('design-input').value='';
+  renderMockup();
+}
+
+function setGarmentColor(el, color){
+  garmentColor = color;
+  document.querySelectorAll('.color-swatch').forEach(s=>s.classList.remove('active'));
+  el.classList.add('active');
+  renderMockup();
+}
+
+function drawTshirt(ctx, W, H, color){
+  const cx = W/2;
+  ctx.fillStyle = color;
+  ctx.strokeStyle = isDark(color) ? 'rgba(255,255,255,.12)' : 'rgba(0,0,0,.12)';
+  ctx.lineWidth = 2;
+
+  // Body
+  ctx.beginPath();
+  ctx.moveTo(cx-110, 170);
+  ctx.lineTo(cx-160, 145);  // left shoulder
+  ctx.lineTo(cx-210, 120);  // left collar outer
+  ctx.lineTo(cx-190, 100);  // left neck
+  ctx.quadraticCurveTo(cx, 85, cx+190, 100); // neck curve
+  ctx.lineTo(cx+210, 120);
+  ctx.lineTo(cx+160, 145);
+  ctx.lineTo(cx+110, 170);
+  ctx.lineTo(cx+120, 500);
+  ctx.lineTo(cx-120, 500);
+  ctx.closePath();
+  ctx.fill(); ctx.stroke();
+
+  // Left sleeve
+  ctx.beginPath();
+  ctx.moveTo(cx-110, 170);
+  ctx.lineTo(cx-160, 145);
+  ctx.lineTo(cx-240, 260);
+  ctx.lineTo(cx-200, 275);
+  ctx.lineTo(cx-160, 220);
+  ctx.lineTo(cx-130, 310);
+  ctx.closePath();
+  ctx.fill(); ctx.stroke();
+
+  // Right sleeve
+  ctx.beginPath();
+  ctx.moveTo(cx+110, 170);
+  ctx.lineTo(cx+160, 145);
+  ctx.lineTo(cx+240, 260);
+  ctx.lineTo(cx+200, 275);
+  ctx.lineTo(cx+160, 220);
+  ctx.lineTo(cx+130, 310);
+  ctx.closePath();
+  ctx.fill(); ctx.stroke();
+
+  // Collar
+  ctx.beginPath();
+  ctx.moveTo(cx-190, 100);
+  ctx.quadraticCurveTo(cx-60, 140, cx, 145);
+  ctx.quadraticCurveTo(cx+60, 140, cx+190, 100);
+  ctx.quadraticCurveTo(cx+150, 90, cx+120, 110);
+  ctx.quadraticCurveTo(cx, 130, cx-120, 110);
+  ctx.quadraticCurveTo(cx-150, 90, cx-190, 100);
+  ctx.fillStyle = shadeColor(color, isDark(color)?20:-15);
+  ctx.fill();
+}
+
+function drawHoodie(ctx, W, H, color){
+  const cx = W/2;
+  ctx.fillStyle = color;
+  ctx.strokeStyle = isDark(color) ? 'rgba(255,255,255,.12)' : 'rgba(0,0,0,.12)';
+  ctx.lineWidth = 2;
+
+  // Body
+  ctx.beginPath();
+  ctx.moveTo(cx-120, 185);
+  ctx.lineTo(cx-170, 155);
+  ctx.lineTo(cx-200, 105);
+  ctx.lineTo(cx-170, 88);
+  ctx.quadraticCurveTo(cx, 70, cx+170, 88);
+  ctx.lineTo(cx+200, 105);
+  ctx.lineTo(cx+170, 155);
+  ctx.lineTo(cx+120, 185);
+  ctx.lineTo(cx+125, 510);
+  ctx.lineTo(cx-125, 510);
+  ctx.closePath();
+  ctx.fill(); ctx.stroke();
+
+  // Left sleeve
+  ctx.beginPath();
+  ctx.moveTo(cx-120, 185);
+  ctx.lineTo(cx-170, 155);
+  ctx.lineTo(cx-255, 275);
+  ctx.lineTo(cx-210, 290);
+  ctx.lineTo(cx-170, 240);
+  ctx.lineTo(cx-140, 325);
+  ctx.closePath();
+  ctx.fill(); ctx.stroke();
+
+  // Right sleeve
+  ctx.beginPath();
+  ctx.moveTo(cx+120, 185);
+  ctx.lineTo(cx+170, 155);
+  ctx.lineTo(cx+255, 275);
+  ctx.lineTo(cx+210, 290);
+  ctx.lineTo(cx+170, 240);
+  ctx.lineTo(cx+140, 325);
+  ctx.closePath();
+  ctx.fill(); ctx.stroke();
+
+  // Hood
+  ctx.beginPath();
+  ctx.moveTo(cx-170, 88);
+  ctx.quadraticCurveTo(cx-200, 30, cx-80, 15);
+  ctx.quadraticCurveTo(cx, 5, cx+80, 15);
+  ctx.quadraticCurveTo(cx+200, 30, cx+170, 88);
+  ctx.quadraticCurveTo(cx+80, 78, cx+40, 92);
+  ctx.quadraticCurveTo(cx, 98, cx-40, 92);
+  ctx.quadraticCurveTo(cx-80, 78, cx-170, 88);
+  ctx.fillStyle = shadeColor(color, isDark(color)?15:-10);
+  ctx.fill(); ctx.stroke();
+
+  // Kangaroo pocket
+  ctx.beginPath();
+  ctx.roundRect(cx-75, 370, 150, 80, 10);
+  ctx.fillStyle = shadeColor(color, isDark(color)?15:-10);
+  ctx.fill(); ctx.stroke();
+
+  // Center zip line
+  ctx.beginPath();
+  ctx.moveTo(cx, 105);
+  ctx.lineTo(cx, 510);
+  ctx.strokeStyle = isDark(color) ? 'rgba(255,255,255,.08)' : 'rgba(0,0,0,.08)';
+  ctx.lineWidth = 3;
+  ctx.stroke();
+}
+
+function shadeColor(hex, pct){
+  const {r,g,b} = hexToRgb(hex);
+  const adjust = v => Math.min(255, Math.max(0, v + Math.round(v * pct/100)));
+  return `rgb(${adjust(r)},${adjust(g)},${adjust(b)})`;
+}
+
+function renderMockup(){
+  const cv = document.getElementById('mockup-canvas');
+  const ctx = cv.getContext('2d');
+  const W = cv.width, H = cv.height;
+  const garment = document.getElementById('garment-type').value;
+  const bgType = document.getElementById('bg-type').value;
+
+  ctx.clearRect(0,0,W,H);
+
+  // Background
+  if(bgType === 'white'){
+    ctx.fillStyle='#ffffff'; ctx.fillRect(0,0,W,H);
+  } else if(bgType === 'light'){
+    ctx.fillStyle='#f5f5f5'; ctx.fillRect(0,0,W,H);
+  } else if(bgType === 'dark'){
+    ctx.fillStyle='#111111'; ctx.fillRect(0,0,W,H);
+    // subtle vignette
+    const grad = ctx.createRadialGradient(W/2,H/2,100,W/2,H/2,W/1.4);
+    grad.addColorStop(0,'rgba(0,0,0,0)');
+    grad.addColorStop(1,'rgba(0,0,0,.5)');
+    ctx.fillStyle=grad; ctx.fillRect(0,0,W,H);
+  } else if(bgType === 'gradient'){
+    const grad = ctx.createLinearGradient(0,0,W,H);
+    grad.addColorStop(0,'#ff3c00');
+    grad.addColorStop(1,'#ff8c00');
+    ctx.fillStyle=grad; ctx.fillRect(0,0,W,H);
+  }
+  // transparent → already cleared
+
+  // Draw garment
+  ctx.save();
+  if(garment==='tshirt') drawTshirt(ctx,W,H,garmentColor);
+  else drawHoodie(ctx,W,H,garmentColor);
+  ctx.restore();
+
+  // Draw design on top
+  if(designImg){
+    const sz = parseInt(document.getElementById('design-size').value) / 100;
+    const posY = parseInt(document.getElementById('design-y').value) / 100;
+    const posX = parseInt(document.getElementById('design-x').value) / 100;
+
+    const designW = W * sz;
+    const ratio = designImg.naturalHeight / designImg.naturalWidth;
+    const designH = designW * ratio;
+    const dx = W * posX - designW/2;
+    const dy = H * posY - designH/2;
+
+    // Subtle overlay for realism
+    ctx.save();
+    ctx.globalAlpha = 0.97;
+    ctx.drawImage(designImg, dx, dy, designW, designH);
+    ctx.restore();
+
+    // Add texture overlay for realism (fabric effect)
+    ctx.save();
+    ctx.globalAlpha = 0.04;
+    ctx.globalCompositeOperation = 'multiply';
+    for(let i=0;i<W;i+=4){
+      for(let j=0;j<H;j+=4){
+        if(Math.random()>0.5){ ctx.fillStyle='#000'; ctx.fillRect(i,j,2,2); }
+      }
+    }
+    ctx.restore();
+  } else {
+    // Placeholder
+    ctx.save();
+    ctx.globalAlpha=0.25;
+    ctx.fillStyle = isDark(garmentColor) ? '#ffffff' : '#333333';
+    ctx.font = 'bold 18px DM Sans, sans-serif';
+    ctx.textAlign='center';
+    ctx.fillText('Subí tu diseño DTF →', W/2, H * (garment==='hoodie'?0.42:0.42));
+    ctx.restore();
+  }
+
+  // Printiflow watermark
+  ctx.save();
+  ctx.globalAlpha=0.3;
+  ctx.fillStyle = isDark(garmentColor) ? '#ffffff' : '#333333';
+  ctx.font='500 12px DM Sans, sans-serif';
+  ctx.textAlign='right';
+  ctx.fillText('printiflow.ar', W-14, H-12);
+  ctx.restore();
+
+  lastCanvas = 'mockup-canvas';
+}
+
+function downloadMockup(fmt){
+  const bgType = document.getElementById('bg-type').value;
+  if(fmt==='png' && bgType==='transparent'){
+    downloadCanvas('mockup-canvas','png','printiflow_mockup');
+  } else {
+    // Add white bg for jpg
+    const cv = document.getElementById('mockup-canvas');
+    const tmp = document.createElement('canvas');
+    tmp.width=cv.width; tmp.height=cv.height;
+    const ctx=tmp.getContext('2d');
+    if(fmt==='jpg'){ ctx.fillStyle='#ffffff'; ctx.fillRect(0,0,tmp.width,tmp.height); }
+    ctx.drawImage(cv,0,0);
+    const a=document.createElement('a');
+    a.href=tmp.toDataURL(fmt==='png'?'image/png':'image/jpeg',0.95);
+    a.download='printiflow_mockup.'+fmt; a.click();
+  }
+}
+
+// ═══════════════════════════ BACKGROUND REMOVER ═══════════════════════════
+let bgOrigDataUrl = null;
+
+function handleBgUpload(e){
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    bgOrigDataUrl = ev.target.result;
+    document.getElementById('bg-img-prev').src = ev.target.result;
+    document.getElementById('bg-fname').textContent = file.name;
+    document.getElementById('bg-thumb').style.display='flex';
+    document.getElementById('bg-orig-img').src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeBgImg(){
+  bgOrigDataUrl=null; bgOrigBlob=null; bgResultBlob=null;
+  document.getElementById('bg-thumb').style.display='none';
+  document.getElementById('bg-input').value='';
+  document.getElementById('bg-placeholder').style.display='flex';
+  document.getElementById('bg-compare').style.display='none';
+  document.getElementById('bg-dl-bar').style.display='none';
+}
+
+async function removeBackground(){
+  if(!bgOrigDataUrl){ alert('Primero subí una foto.'); return; }
+  const apiKey = document.getElementById('removebg-key').value.trim();
+  if(!apiKey){ alert('Ingresá tu API key de Remove.bg.\n\nEs gratis en: remove.bg/api'); return; }
+
+  document.getElementById('bg-loading').style.display='flex';
+  document.getElementById('bg-placeholder').style.display='none';
+  document.getElementById('bg-compare').style.display='none';
+  document.getElementById('bg-dl-bar').style.display='none';
+
+  try{
+    // Convert dataURL to blob
+    const res = await fetch(bgOrigDataUrl);
+    const blob = await res.blob();
+    bgOrigBlob = blob;
+
+    const formData = new FormData();
+    formData.append('image_file', blob, 'photo.jpg');
+    formData.append('size', 'auto');
+    
+    const bgResultColor = document.getElementById('bg-result-color').value;
+    if(bgResultColor === 'white') formData.append('bg_color', 'white');
+    else if(bgResultColor === 'light-gray') formData.append('bg_color', 'f5f5f5');
+
+    const response = await fetch('https://api.remove.bg/v1.0/removebg', {
+      method: 'POST',
+      headers: { 'X-Api-Key': apiKey },
+      body: formData
+    });
+
+    if(!response.ok){
+      const err = await response.json();
+      throw new Error(err.errors?.[0]?.title || 'Error de Remove.bg');
+    }
+
+    bgResultBlob = await response.blob();
+    const resultUrl = URL.createObjectURL(bgResultBlob);
+
+    document.getElementById('bg-result-img').src = resultUrl;
+    document.getElementById('bg-loading').style.display='none';
+    document.getElementById('bg-compare').style.display='grid';
+    document.getElementById('bg-dl-bar').style.display='flex';
+    lastCanvas = 'bg-result';
+
+  } catch(err){
+    document.getElementById('bg-loading').style.display='none';
+    document.getElementById('bg-placeholder').style.display='flex';
+    alert('Error: ' + (err.message||'Verificá tu API key de Remove.bg'));
+  }
+}
+
+function downloadBgResult(fmt){
+  if(!bgResultBlob){ alert('Primero quitá el fondo.'); return; }
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(bgResultBlob);
+  a.download='printiflow_sin_fondo.'+(fmt==='png'?'png':'jpg');
+  a.click();
+}
+
+// ═══════════════════════════ INSTAGRAM ═══════════════════════════
+let igImgData = null;
+
+function handleIgUpload(e){
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    igImgData = ev.target.result;
+    document.getElementById('ig-img-prev').src = ev.target.result;
+    document.getElementById('ig-fname').textContent = file.name;
+    document.getElementById('ig-thumb').style.display='flex';
+    generateIgPost();
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeIgImg(){
+  igImgData=null;
+  document.getElementById('ig-thumb').style.display='none';
+  document.getElementById('ig-input').value='';
+}
+
+function selectIgTpl(el, tpl){
+  document.querySelectorAll('.ig-tpl').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  igTemplate = tpl;
+  if(igImgData) generateIgPost();
+}
+
+async function generateIgPost(){
+  const cv = document.getElementById('ig-canvas');
+  const ctx = cv.getContext('2d');
+  const W=1080, H=1080;
+  ctx.clearRect(0,0,W,H);
+
+  const title = document.getElementById('ig-title').value || 'NUEVO DISEÑO';
+  const subtitle = document.getElementById('ig-subtitle').value || 'Impresión DTF premium';
+  const cta = document.getElementById('ig-cta').value || '¡Pedí el tuyo! 🔥';
+  const handle = document.getElementById('ig-handle').value || '@printiflow';
+
+  const templates = {
+    minimal: {
+      bg: ()=>{ ctx.fillStyle='#f8f6f3'; ctx.fillRect(0,0,W,H);
+        ctx.fillStyle='#111'; ctx.fillRect(0,H-120,W,120);
+      },
+      titleColor:'#111', subtitleColor:'#555', ctaColor:'#fff', handleColor:'rgba(255,255,255,.7)',
+      accent:'#ff3c00'
+    },
+    bold: {
+      bg: ()=>{
+        const g=ctx.createLinearGradient(0,0,W,H);
+        g.addColorStop(0,'#ff3c00'); g.addColorStop(1,'#ff8000');
+        ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+        ctx.fillStyle='rgba(0,0,0,.3)'; ctx.fillRect(0,H-160,W,160);
+      },
+      titleColor:'#fff', subtitleColor:'rgba(255,255,255,.85)', ctaColor:'#fff', handleColor:'rgba(255,255,255,.6)',
+      accent:'#ffb800'
+    },
+    dark: {
+      bg: ()=>{
+        ctx.fillStyle='#0d0d0d'; ctx.fillRect(0,0,W,H);
+        const g=ctx.createRadialGradient(W/2,H/2,100,W/2,H/2,W*0.8);
+        g.addColorStop(0,'rgba(255,60,0,.08)');
+        g.addColorStop(1,'rgba(0,0,0,0)');
+        ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+      },
+      titleColor:'#ffffff', subtitleColor:'rgba(255,255,255,.7)', ctaColor:'#ff3c00', handleColor:'rgba(255,255,255,.4)',
+      accent:'#ff3c00'
+    },
+    yellow: {
+      bg: ()=>{
+        const g=ctx.createLinearGradient(0,0,0,H);
+        g.addColorStop(0,'#ffb800'); g.addColorStop(1,'#ff8c00');
+        ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+        ctx.fillStyle='rgba(0,0,0,.5)'; ctx.fillRect(0,H-150,W,150);
+      },
+      titleColor:'#111', subtitleColor:'rgba(0,0,0,.7)', ctaColor:'#fff', handleColor:'rgba(255,255,255,.7)',
+      accent:'#111'
+    }
+  };
+
+  const tpl = templates[igTemplate] || templates.minimal;
+  tpl.bg();
+
+  // Decorative lines
+  ctx.save();
+  ctx.strokeStyle = tpl.accent+'44';
+  ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(60,60); ctx.lineTo(W-60,60); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(60,H-60); ctx.lineTo(W-60,H-60); ctx.stroke();
+  ctx.restore();
+
+  // Product image
+  if(igImgData){
+    try{
+      const img = await loadImage(igImgData);
+      const imgSize = 680;
+      const ratio = img.naturalWidth/img.naturalHeight;
+      let iw=imgSize, ih=imgSize;
+      if(ratio>1) ih=imgSize/ratio; else iw=imgSize*ratio;
+      const ix=(W-iw)/2, iy=(H-ih)/2 - 40;
+      ctx.save();
+      ctx.shadowColor='rgba(0,0,0,.3)'; ctx.shadowBlur=40;
+      ctx.drawImage(img,ix,iy,iw,ih);
+      ctx.restore();
+    } catch(e){}
+  } else {
+    ctx.save();
+    ctx.fillStyle='rgba(255,255,255,.08)';
+    ctx.fillRect(290,200,500,500);
+    ctx.fillStyle='rgba(255,255,255,.2)';
+    ctx.font='48px DM Sans'; ctx.textAlign='center';
+    ctx.fillText('📷 Subí tu foto', W/2, 460);
+    ctx.restore();
+  }
+
+  // Title
+  ctx.save();
+  ctx.fillStyle=tpl.titleColor;
+  ctx.font=`900 ${igTemplate==='bold'?86:78}px Bebas Neue, sans-serif`;
+  ctx.textAlign='center';
+  ctx.fillText(title.toUpperCase(), W/2, H-310);
+  ctx.restore();
+
+  // Accent line
+  ctx.save();
+  ctx.fillStyle=tpl.accent;
+  ctx.fillRect(W/2-60, H-285, 120, 5);
+  ctx.restore();
+
+  // Subtitle
+  ctx.save();
+  ctx.fillStyle=tpl.subtitleColor;
+  ctx.font='500 36px DM Sans, sans-serif';
+  ctx.textAlign='center';
+  ctx.fillText(subtitle, W/2, H-235);
+  ctx.restore();
+
+  // CTA
+  ctx.save();
+  ctx.fillStyle=tpl.accent;
+  const ctaW=360, ctaH=64;
+  ctx.beginPath();
+  ctx.roundRect(W/2-ctaW/2, H-195, ctaW, ctaH, 32);
+  ctx.fill();
+  ctx.fillStyle='#fff';
+  ctx.font='700 28px DM Sans, sans-serif';
+  ctx.textAlign='center';
+  ctx.fillText(cta, W/2, H-157);
+  ctx.restore();
+
+  // Handle
+  ctx.save();
+  ctx.fillStyle=tpl.handleColor;
+  ctx.font='500 26px DM Sans, sans-serif';
+  ctx.textAlign='center';
+  ctx.fillText(handle, W/2, H-105);
+  ctx.restore();
+
+  lastCanvas='ig-canvas';
+}
+
+function downloadIg(fmt){
+  downloadCanvas('ig-canvas', fmt, 'printiflow_ig_post');
+}
+
+// ═══════════════════════════ CANVA ═══════════════════════════
+async function createCanvaDesign(){
+  const prompt = document.getElementById('canva-prompt').value;
+  if(!prompt){ alert('Escribí una descripción para el diseño.'); return; }
+  alert('Creando diseño en Canva... (abrirá en nueva pestaña)');
+  // Canva MCP integration would go here
+}
+
+function downloadCurrentResult(fmt){
+  if(lastCanvas==='mockup-canvas') downloadMockup(fmt);
+  else if(lastCanvas==='ig-canvas') downloadIg(fmt);
+  else if(lastCanvas==='bg-result') downloadBgResult(fmt);
+  else alert('Primero generá un mockup, post o resultado en alguna de las pestañas.');
+}
+
+// ═══════════════════════════ DRAG & DROP ═══════════════════════════
+['design-zone','bg-zone','ig-zone'].forEach(zoneId=>{
+  const zone = document.getElementById(zoneId);
+  if(!zone) return;
+  zone.addEventListener('dragover',e=>{e.preventDefault();zone.style.borderColor='var(--accent)';});
+  zone.addEventListener('dragleave',()=>zone.style.borderColor='');
+  zone.addEventListener('drop',e=>{
+    e.preventDefault(); zone.style.borderColor='';
+    const f=e.dataTransfer.files[0];
+    if(!f||!f.type.startsWith('image/')) return;
+    const inputId = zoneId==='design-zone'?'design-input':zoneId==='bg-zone'?'bg-input':'ig-input';
+    const handler = zoneId==='design-zone'?handleDesignUpload:zoneId==='bg-zone'?handleBgUpload:handleIgUpload;
+    handler({target:{files:[f]}});
+  });
+});
+
+// ═══════════════════════════ CANVA MCP ═══════════════════════════
+async function createCanvaPost(type){
+  const prompt = document.getElementById('canva-prompt').value || 'Post de Instagram para remera DTF con diseño colorido, estilo moderno para Printiflow';
+  try {
+    alert('Conectando con Canva... Esta función requiere la integración con Canva MCP activa en Claude.');
+  } catch(e){
+    alert('Para usar Canva, copiá tu imagen descargada y abrila en canva.com');
+  }
+}
+
+// ═══════════════════════════ INIT ═══════════════════════════
+renderMockup();
+switchTab('mockup');
+
+// Live IG preview on text change
+['ig-title','ig-subtitle','ig-cta','ig-handle'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', ()=>{ if(currentTab==='ig') generateIgPost(); });
+});
+</script>
+</body>
+</html>
