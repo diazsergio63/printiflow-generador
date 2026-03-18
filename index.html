@@ -117,10 +117,34 @@
   .provbtn.banana.active{border-color:#d97706;background:#d97706;color:white;}
   .prov-info{font-size:.75rem;color:var(--muted);margin-top:.3rem;line-height:1.5;}
 
+  /* Mode switcher */
+  .mode-switch{display:flex;gap:.5rem;margin-bottom:1.5rem;}
+  .mode-btn{flex:1;padding:.7rem 1rem;border:2px solid var(--border);background:var(--card);border-radius:12px;cursor:pointer;font-family:'Syne',sans-serif;font-weight:700;font-size:.85rem;text-align:center;transition:all .18s;color:var(--muted);}
+  .mode-btn:hover{border-color:var(--ink);color:var(--ink);}
+  .mode-btn.active{background:var(--ink);color:var(--paper);border-color:var(--ink);}
+  .mode-btn.edit-mode.active{background:var(--accent2);border-color:var(--accent2);}
+
+  /* Edit presets */
+  .edit-presets{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:.7rem;margin-bottom:1rem;}
+  .epreset{background:var(--paper);border:2px solid var(--border);border-radius:10px;padding:.8rem 1rem;cursor:pointer;transition:all .18s;text-align:left;}
+  .epreset:hover{border-color:var(--accent2);background:#faf5ff;}
+  .epreset.selected{border-color:var(--accent2);background:#faf5ff;}
+  .epreset .etag{font-size:.65rem;font-weight:700;font-family:'Syne',sans-serif;text-transform:uppercase;letter-spacing:.08em;color:var(--accent2);margin-bottom:.3rem;}
+  .epreset h4{font-family:'Syne',sans-serif;font-size:.85rem;font-weight:700;margin-bottom:.2rem;}
+  .epreset p{font-size:.73rem;color:var(--muted);line-height:1.4;}
+
+  /* Edit upload */
+  #edit-upload-prev{display:none;gap:1rem;align-items:flex-start;margin-top:1rem;padding:1rem;background:#faf5ff;border:2px solid #ddd6fe;border-radius:12px;}
+  #edit-upload-prev img{width:110px;height:110px;object-fit:cover;border-radius:8px;border:2px solid var(--border);flex-shrink:0;}
+  #edit-result-box{display:flex;gap:1.5rem;align-items:flex-start;margin-top:1rem;flex-wrap:wrap;}
+  #edit-result-box img{flex:1;min-width:200px;max-width:100%;border-radius:10px;border:2px solid var(--border);}
+
   @media(max-width:600px){
     .prompts-grid{grid-template-columns:1fr;}
     .btn-row,.dlrow{flex-direction:column;}
     #uprev{flex-direction:column;}
+    .mode-switch{flex-direction:column;}
+    #edit-result-box{flex-direction:column;}
   }
 </style>
 </head>
@@ -151,6 +175,15 @@
     </div>
   </div>
 
+  <!-- Mode switcher -->
+  <div class="mode-switch">
+    <button class="mode-btn active" id="mb-gen" onclick="setMode('gen')">⚡ Generar imagen</button>
+    <button class="mode-btn edit-mode" id="mb-edit" onclick="setMode('edit')">✏️ Editar mi foto con IA <span class="badge badge-purple" style="margin-left:.3rem;">Nuevo</span></button>
+  </div>
+
+  <!-- MODO GENERACIÓN -->
+  <div id="section-gen">
+
   <div class="tabs">
     <button class="tab active" onclick="switchTab('producto')">📦 Fotos de Producto</button>
     <button class="tab" onclick="switchTab('instagram')">📱 Posts Instagram</button>
@@ -170,7 +203,6 @@
       <p>Arrastrá tu foto aquí o <strong>hacé clic para seleccionarla</strong></p>
       <p style="margin-top:.3rem;font-size:.75rem;">JPG · PNG · WEBP — máx. 5MB</p>
     </div>
-    <!-- Preview de imagen subida -->
     <div id="uprev">
       <img id="pthumb" src="" alt="preview de producto">
       <div class="uinfo">
@@ -239,6 +271,102 @@
       <button class="btn secondary" onclick="openBrowser()">🔗 Abrir en navegador</button>
     </div>
   </div>
+
+  </div><!-- /section-gen -->
+
+  <!-- MODO EDICIÓN -->
+  <div id="section-edit" style="display:none;">
+
+  <div class="panel">
+    <h2>🖼️ Subí tu foto para editar</h2>
+    <p style="font-size:.83rem;color:var(--muted);margin-bottom:1rem;">Subí cualquier foto de tu producto y elegí cómo querés editarla con IA.</p>
+    <div class="upload-zone" id="edit-uzone">
+      <input type="file" id="edit-finput" accept="image/jpeg,image/png,image/webp" onchange="handleEditUpload(event)">
+      <div class="uicon">📷</div>
+      <p>Arrastrá tu foto aquí o <strong>hacé clic para seleccionarla</strong></p>
+      <p style="margin-top:.3rem;font-size:.75rem;">JPG · PNG · WEBP — máx. 5MB</p>
+    </div>
+    <div id="edit-upload-prev" style="display:none;flex-direction:row;gap:1rem;align-items:flex-start;margin-top:1rem;padding:1rem;background:#faf5ff;border:2px solid #ddd6fe;border-radius:12px;">
+      <img id="edit-thumb" src="" alt="preview">
+      <div class="uinfo">
+        <div class="fname" id="edit-fname">—</div>
+        <div class="fstatus loaded">✓ Imagen lista para editar</div>
+        <button class="btn-remove" onclick="removeEditImage()">✕ Quitar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>🎨 ¿Qué querés hacer con la foto?</h2>
+    <div class="edit-presets" id="edit-presets">
+      <div class="epreset selected" onclick="selectPreset(this,'Remove the background and replace it with a clean pure white background, professional product photography style, keep the product exactly as is')" >
+        <div class="etag">Mercado Libre</div>
+        <h4>🏳️ Fondo blanco</h4>
+        <p>Fondo blanco puro para ML y e-commerce</p>
+      </div>
+      <div class="epreset" onclick="selectPreset(this,'Enhance the photo quality, improve lighting, make colors more vibrant and realistic, professional product photography, sharp focus, studio quality')">
+        <div class="etag">Calidad</div>
+        <h4>✨ Mejorar calidad</h4>
+        <p>Más nitidez, colores y realismo</p>
+      </div>
+      <div class="epreset" onclick="selectPreset(this,'Replace the background with a modern lifestyle setting, soft natural light, wooden table or neutral surface, professional e-commerce product photography')">
+        <div class="etag">Lifestyle</div>
+        <h4>🌿 Fondo lifestyle</h4>
+        <p>Fondo moderno para Instagram</p>
+      </div>
+      <div class="epreset" onclick="selectPreset(this,'Place the product on a flat lay surface with a clean pastel background, top view, minimal props, professional Instagram flat lay photography style')">
+        <div class="etag">Instagram</div>
+        <h4>📐 Flat lay</h4>
+        <p>Vista cenital para redes sociales</p>
+      </div>
+      <div class="epreset" onclick="selectPreset(this,'Dramatically enhance the colors, make them more vivid and saturated, improve contrast, make the design pop, keep the product shape identical')">
+        <div class="etag">Diseño</div>
+        <h4>🎨 Colores vibrantes</h4>
+        <p>Colores más intensos y llamativos</p>
+      </div>
+      <div class="epreset" id="preset-custom" onclick="selectPreset(this,'')">
+        <div class="etag">Personalizado</div>
+        <h4>✍️ Instrucción propia</h4>
+        <p>Escribí exactamente qué querés cambiar</p>
+      </div>
+    </div>
+    <textarea id="edit-prompt" placeholder="Describí qué querés editar (en inglés da mejores resultados)..." style="width:100%;padding:.9rem;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.88rem;color:var(--ink);background:var(--paper);resize:vertical;min-height:70px;outline:none;transition:border-color .15s;" oninput="onEditPromptInput()"></textarea>
+    <div class="btn-row" style="margin-top:1rem;">
+      <button class="btn purple" onclick="editImage()">✏️ Editar con IA</button>
+    </div>
+  </div>
+
+  <!-- Resultado edición -->
+  <div class="panel" id="edit-result-panel" style="display:none;">
+    <h2>🖼️ Resultado</h2>
+    <div class="lov" id="edit-lov" style="position:relative;min-height:100px;background:var(--paper);border-radius:10px;display:none;align-items:center;justify-content:center;flex-direction:column;gap:.8rem;padding:2rem;">
+      <div class="spin"></div>
+      <p style="font-size:.8rem;color:var(--muted)" id="edit-lovtxt">Editando imagen...</p>
+    </div>
+    <div class="error-box" id="edit-errbox" style="display:none;">
+      <strong>⚠️ <span id="edit-errtitle">Error al editar</span></strong><br>
+      <span id="edit-errmsg"></span>
+      <div style="margin-top:.7rem;">
+        <button class="btn" style="font-size:.75rem;padding:.5rem 1rem;" onclick="editImage()">🔄 Reintentar</button>
+      </div>
+    </div>
+    <div id="edit-result-box" style="display:none;">
+      <div style="flex:1;min-width:200px;">
+        <p style="font-size:.75rem;color:var(--muted);margin-bottom:.5rem;font-weight:600;">ORIGINAL</p>
+        <img id="edit-orig-img" src="" alt="original" style="width:100%;border-radius:10px;border:2px solid var(--border);">
+      </div>
+      <div style="flex:1;min-width:200px;">
+        <p style="font-size:.75rem;color:var(--muted);margin-bottom:.5rem;font-weight:600;">EDITADA ✨</p>
+        <img id="edit-out-img" src="" alt="editada" style="width:100%;border-radius:10px;border:2px solid var(--accent2);">
+      </div>
+    </div>
+    <div class="dlrow" style="margin-top:1rem;">
+      <button id="edit-dl-jpg" class="btn green" style="display:none" onclick="dlEditImg('jpg')">⬇️ Descargar JPG</button>
+      <button id="edit-dl-png" class="btn green" style="display:none" onclick="dlEditImg('png')">⬇️ Descargar PNG</button>
+    </div>
+  </div>
+
+  </div><!-- /section-edit -->
 
   <!-- Preview -->
   <div class="preview-area">
@@ -734,9 +862,164 @@ uz.addEventListener('drop',e=>{
 
 render();
 
-// Verificar sesión de Puter al cargar
+// ── Modo: Generar / Editar ──
+function setMode(m){
+  document.getElementById('mb-gen').classList.toggle('active', m==='gen');
+  document.getElementById('mb-edit').classList.toggle('active', m==='edit');
+  document.getElementById('section-gen').style.display = m==='gen' ? 'block' : 'none';
+  document.getElementById('section-edit').style.display = m==='edit' ? 'block' : 'none';
+}
+
+// ── Edit upload ──
+let editB64=null, editBtype=null, editDataUrl=null, editBlob=null;
+let editSelectedPrompt = 'Remove the background and replace it with a clean pure white background, professional product photography style, keep the product exactly as is';
+
+function handleEditUpload(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  if(file.size > 5*1024*1024){ alert('La imagen debe ser menor a 5MB.'); return; }
+  const reader = new FileReader();
+  reader.onload = function(ev){
+    editDataUrl = ev.target.result;
+    editB64 = editDataUrl.split(',')[1];
+    editBtype = file.type || 'image/jpeg';
+    const prev = document.getElementById('edit-upload-prev');
+    document.getElementById('edit-thumb').src = editDataUrl;
+    document.getElementById('edit-fname').textContent = file.name;
+    prev.style.cssText = 'display:flex !important;flex-direction:row;gap:1rem;align-items:flex-start;margin-top:1rem;padding:1rem;background:#faf5ff;border:2px solid #ddd6fe;border-radius:12px;';
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeEditImage(){
+  editB64=null; editDataUrl=null;
+  document.getElementById('edit-upload-prev').style.display='none';
+  document.getElementById('edit-finput').value='';
+  document.getElementById('edit-thumb').src='';
+  document.getElementById('edit-result-panel').style.display='none';
+}
+
+function selectPreset(el, prompt){
+  document.querySelectorAll('.epreset').forEach(e=>e.classList.remove('selected'));
+  el.classList.add('selected');
+  editSelectedPrompt = prompt;
+  const ta = document.getElementById('edit-prompt');
+  if(prompt) ta.value = '';
+  else ta.focus();
+}
+
+function onEditPromptInput(){
+  // Si escribe en el textarea, deseleccionar presets y usar el custom
+  document.querySelectorAll('.epreset').forEach(e=>e.classList.remove('selected'));
+  document.getElementById('preset-custom').classList.add('selected');
+  editSelectedPrompt = '';
+}
+
+function getEditPrompt(){
+  const custom = document.getElementById('edit-prompt').value.trim();
+  return custom || editSelectedPrompt;
+}
+
+// ── Editar imagen con Flux Kontext (Puter.js) ──
+async function editImage(){
+  if(!editB64){ alert('Primero subí una foto para editar.'); return; }
+  const prompt = getEditPrompt();
+  if(!prompt){ alert('Seleccioná una opción de edición o escribí una instrucción.'); return; }
+
+  const panel = document.getElementById('edit-result-panel');
+  const lovEl = document.getElementById('edit-lov');
+  const errEl = document.getElementById('edit-errbox');
+  const resEl = document.getElementById('edit-result-box');
+  const dlJpg = document.getElementById('edit-dl-jpg');
+  const dlPng = document.getElementById('edit-dl-png');
+
+  panel.style.display='block';
+  lovEl.style.display='flex';
+  errEl.style.display='none';
+  resEl.style.display='none';
+  dlJpg.style.display='none';
+  dlPng.style.display='none';
+  document.getElementById('edit-lovtxt').textContent='✏️ Editando con IA... (20-40 seg)';
+
+  try{
+    if(typeof puter === 'undefined') throw new Error('Puter.js no cargó. Abrí la versión de GitHub Pages.');
+
+    // Subir imagen a Puter FS para obtener URL pública
+    document.getElementById('edit-lovtxt').textContent='📤 Subiendo imagen...';
+    const byteStr = atob(editB64);
+    const byteArr = new Uint8Array(byteStr.length);
+    for(let i=0;i<byteStr.length;i++) byteArr[i]=byteStr.charCodeAt(i);
+    const fileBlob = new Blob([byteArr], {type: editBtype});
+    const fileName = 'printiflow_edit_'+Date.now()+'.jpg';
+
+    const uploaded = await puter.fs.write(fileName, fileBlob, {overwrite:true});
+    const fileUrl = await puter.fs.sign(uploaded.path || fileName);
+
+    document.getElementById('edit-lovtxt').textContent='🤖 Aplicando edición IA...';
+
+    // Usar Flux.1 Kontext para edición imagen→imagen
+    const result = await puter.ai.txt2img(prompt, {
+      model: 'black-forest-labs/flux.1-kontext-pro',
+      image_url: typeof fileUrl === 'string' ? fileUrl : fileUrl.url || fileUrl
+    });
+
+    if(!result || !result.src) throw new Error('No se recibió imagen editada.');
+
+    // Mostrar comparación original vs editada
+    editBlob = null;
+    const res = await fetch(result.src);
+    editBlob = await res.blob();
+
+    document.getElementById('edit-orig-img').src = editDataUrl;
+    document.getElementById('edit-out-img').src = result.src;
+
+    lovEl.style.display='none';
+    resEl.style.display='flex';
+    dlJpg.style.display='inline-flex';
+    dlPng.style.display='inline-flex';
+
+    panel.scrollIntoView({behavior:'smooth', block:'nearest'});
+
+  } catch(err){
+    lovEl.style.display='none';
+    errEl.style.display='block';
+    const msg = err?.message || String(err);
+    document.getElementById('edit-errtitle').textContent='Error al editar';
+    document.getElementById('edit-errmsg').textContent = msg.includes('Puter') ? msg : 'No se pudo editar la imagen. Asegurate de estar logueado en Puter y reintentá.';
+  }
+}
+
+// ── Descarga imagen editada ──
+async function dlEditImg(fmt){
+  if(!editBlob){ alert('No hay imagen editada para descargar.'); return; }
+  try{
+    if(fmt==='jpg' && editBlob.type !== 'image/jpeg'){
+      const bmp = await createImageBitmap(editBlob);
+      const cv = document.createElement('canvas');
+      cv.width=bmp.width; cv.height=bmp.height;
+      cv.getContext('2d').drawImage(bmp,0,0);
+      cv.toBlob(b=>{ const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='printiflow_editada.jpg'; a.click(); },'image/jpeg',0.95);
+    } else {
+      const a=document.createElement('a');
+      a.href=URL.createObjectURL(editBlob);
+      a.download=`printiflow_editada.${fmt}`; a.click();
+    }
+  } catch(e){ alert('Error al descargar. Intentá de nuevo.'); }
+}
+
+// Drag & drop zona edición
 window.addEventListener('load', ()=>{
   setTimeout(checkPuterSession, 1500);
+  const ez = document.getElementById('edit-uzone');
+  if(ez){
+    ez.addEventListener('dragover',e=>{e.preventDefault();ez.classList.add('dragover');});
+    ez.addEventListener('dragleave',()=>ez.classList.remove('dragover'));
+    ez.addEventListener('drop',e=>{
+      e.preventDefault(); ez.classList.remove('dragover');
+      const f=e.dataTransfer.files[0];
+      if(f&&f.type.startsWith('image/')) handleEditUpload({target:{files:[f]}});
+    });
+  }
 });
 </script>
 </body>
