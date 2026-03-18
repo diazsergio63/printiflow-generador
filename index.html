@@ -882,7 +882,7 @@ function getEditPrompt(){
   return custom || editSelectedPrompt;
 }
 
-// ── Editar imagen con IA (Gemini via Puter.js) ──
+// ── Editar imagen con Nano Banana (Gemini via Puter.js) ──
 async function editImage(){
   if(!editB64){ alert('Primero subí una foto para editar.'); return; }
   const prompt = getEditPrompt();
@@ -901,63 +901,30 @@ async function editImage(){
   resEl.style.display='none';
   dlJpg.style.display='none';
   dlPng.style.display='none';
-  document.getElementById('edit-lovtxt').textContent='✏️ Editando con IA... (20-40 seg)';
   panel.scrollIntoView({behavior:'smooth', block:'nearest'});
 
   try{
-    if(typeof puter === 'undefined') throw new Error('Puter.js no cargó. Usá la versión de GitHub Pages.');
+    if(typeof puter === 'undefined') throw new Error('Puter.js no cargó. Recargá la página.');
 
-    // Método: Gemini image editing via puter.ai.txt2img con imagen como data URL
-    document.getElementById('edit-lovtxt').textContent='🍌 Editando con Nano Banana...';
+    document.getElementById('edit-lovtxt').textContent='🍌 Nano Banana editando tu imagen... (20-50 seg)';
 
+    // Nano Banana (Gemini) acepta imagen como data URL directamente
     const dataUrl = `data:${editBtype};base64,${editB64}`;
 
-    // Intentar con Flux Kontext primero (mejor para edición), luego Gemini como fallback
-    let result = null;
-    let lastErr = null;
+    const result = await puter.ai.txt2img(prompt, {
+      model: 'gemini-2.5-flash-image-preview',
+      image_url: dataUrl
+    });
 
-    // Intento 1: Flux Kontext con imagen como URL de datos
-    try{
-      result = await puter.ai.txt2img(prompt, {
-        model: 'black-forest-labs/flux.1-kontext-pro',
-        image_url: dataUrl
-      });
-    } catch(e1){
-      lastErr = e1;
-      // Intento 2: Gemini con imagen base64 via chat → genera imagen editada
-      try{
-        document.getElementById('edit-lovtxt').textContent='🍌 Usando Gemini para editar...';
-        const chatResp = await puter.ai.chat(
-          [
-            { type:'image', image: dataUrl },
-            { type:'text', text: prompt + '. Edit this exact image accordingly and return only the edited image.' }
-          ],
-          { model: 'gemini-2.5-flash-image-preview' }
-        );
-        // Gemini devuelve la imagen como parte de la respuesta
-        if(chatResp && chatResp.image){
-          result = chatResp.image;
-        } else {
-          throw new Error('Gemini no devolvió imagen editada.');
-        }
-      } catch(e2){
-        // Intento 3: Nano Banana txt2img con prompt descriptivo (sin imagen de entrada)
-        document.getElementById('edit-lovtxt').textContent='🌸 Generando con prompt mejorado...';
-        result = await puter.ai.txt2img(
-          'Professional product photo: ' + prompt + ', photorealistic, studio quality, white background, sharp focus',
-          { model: 'gemini-2.5-flash-image-preview' }
-        );
-      }
-    }
-
-    if(!result || !result.src) throw new Error('No se recibió imagen del servicio de IA.');
+    if(!result || !result.src) throw new Error('Nano Banana no devolvió imagen. Reintentá.');
 
     editBlob = null;
     const fetchRes = await fetch(result.src);
     editBlob = await fetchRes.blob();
+    const blobUrl = URL.createObjectURL(editBlob);
 
     document.getElementById('edit-orig-img').src = editDataUrl;
-    document.getElementById('edit-out-img').src = result.src;
+    document.getElementById('edit-out-img').src = blobUrl;
 
     lovEl.style.display='none';
     resEl.style.display='flex';
@@ -967,9 +934,11 @@ async function editImage(){
   } catch(err){
     lovEl.style.display='none';
     errEl.style.display='block';
-    const msg = err?.message || String(err);
+    const div = errEl.querySelector('div');
+    if(div) div.style.display='flex';
     document.getElementById('edit-errtitle').textContent='Error al editar';
-    document.getElementById('edit-errmsg').textContent = msg.length > 120 ? msg.substring(0,120)+'...' : msg;
+    const msg = err?.message || String(err);
+    document.getElementById('edit-errmsg').textContent = msg.length > 150 ? msg.substring(0,150)+'...' : msg;
     console.error('Edit error:', err);
   }
 }
