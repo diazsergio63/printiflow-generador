@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generador de Imágenes — Printiflow</title>
+<script src="https://js.puter.com/v2/"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap');
+  :root {
+    --ink:#0d0d0d; --paper:#f5f2ee; --accent:#ff3c00;
+    --accent2:#7c3aed; --muted:#8a8580; --card:#ffffff; --border:#e2ddd8;
+    --green:#16a34a; --green-bg:#dcfce7;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'DM Sans',sans-serif;background:var(--paper);color:var(--ink);min-height:100vh;padding:2rem 1rem;}
+  .header{text-align:center;margin-bottom:2.5rem;}
+  .logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:.5rem;}
+  h1{font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(1.6rem,4vw,2.4rem);line-height:1.1;}
+  h1 span{color:var(--accent);}
+  .subtitle{font-size:.95rem;color:var(--muted);margin-top:.5rem;}
+  .container{max-width:900px;margin:0 auto;}
+  .badge{display:inline-block;font-size:.65rem;font-weight:700;font-family:'Syne',sans-serif;letter-spacing:.08em;text-transform:uppercase;padding:.2rem .6rem;border-radius:999px;background:var(--green-bg);color:var(--green);margin-left:.4rem;}
+  .badge-purple{background:#ede9fe;color:#5b21b6;}
+
+  .tabs{display:flex;gap:.5rem;margin-bottom:1.5rem;flex-wrap:wrap;}
+  .tab{font-family:'Syne',sans-serif;font-weight:700;font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;padding:.5rem 1.1rem;border:2px solid var(--border);background:var(--card);color:var(--muted);border-radius:999px;cursor:pointer;transition:all .18s;}
+  .tab:hover{border-color:var(--ink);color:var(--ink);}
+  .tab.active{background:var(--ink);color:var(--paper);border-color:var(--ink);}
+
+  .prompts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:1rem;margin-bottom:1.5rem;}
+  .prompt-card{background:var(--card);border:2px solid var(--border);border-radius:12px;padding:1.2rem;cursor:pointer;transition:all .2s;position:relative;}
+  .prompt-card:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 8px 24px rgba(255,60,0,.1);}
+  .prompt-card.selected{border-color:var(--accent);background:#fff5f2;}
+  .prompt-card .tag{font-family:'Syne',sans-serif;font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:.5rem;}
+  .prompt-card h3{font-family:'Syne',sans-serif;font-weight:700;font-size:.95rem;margin-bottom:.4rem;}
+  .prompt-card p{font-size:.78rem;color:var(--muted);line-height:1.5;}
+  .check{position:absolute;top:.8rem;right:.8rem;width:22px;height:22px;border-radius:50%;background:var(--accent);display:none;align-items:center;justify-content:center;color:white;font-size:12px;}
+  .prompt-card.selected .check{display:flex;}
+
+  .panel{background:var(--card);border:2px solid var(--border);border-radius:16px;padding:1.5rem;margin-bottom:1.5rem;}
+  .panel h2{font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;margin-bottom:1.2rem;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;}
+
+  /* Upload */
+  .upload-zone{border:2px dashed var(--border);border-radius:12px;padding:1.5rem;text-align:center;cursor:pointer;transition:all .2s;position:relative;background:var(--paper);}
+  .upload-zone:hover,.upload-zone.dragover{border-color:var(--accent2);background:#faf5ff;}
+  .upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+  .upload-zone .uicon{font-size:2rem;margin-bottom:.5rem;}
+  .upload-zone p{font-size:.85rem;color:var(--muted);}
+  .upload-zone strong{color:var(--accent2);}
+
+  /* Preview de imagen subida */
+  #uprev{display:none;flex-direction:row;gap:1rem;align-items:flex-start;margin-top:1rem;padding:1rem;background:#faf5ff;border:2px solid #ddd6fe;border-radius:12px;}
+  #uprev img{width:90px;height:90px;object-fit:cover;border-radius:8px;border:2px solid var(--border);flex-shrink:0;display:block;}
+  .uinfo{flex:1;}
+  .uinfo .fname{font-size:.85rem;font-weight:500;margin-bottom:.4rem;word-break:break-all;color:var(--ink);}
+  .uinfo .fstatus{font-size:.8rem;margin-bottom:.5rem;}
+  .fstatus.loaded{color:var(--green);font-weight:500;}
+  .fstatus.analyzing{color:var(--accent2);font-weight:500;}
+  .fstatus.done{color:var(--green);font-weight:500;}
+  .btn-remove{font-size:.75rem;color:var(--accent);background:none;border:1px solid var(--accent);border-radius:999px;cursor:pointer;padding:.25rem .7rem;font-family:'DM Sans',sans-serif;transition:all .15s;}
+  .btn-remove:hover{background:var(--accent);color:white;}
+  .ai-box{background:#faf5ff;border:1px solid #ddd6fe;border-radius:8px;padding:.9rem;margin-top:.8rem;font-size:.8rem;color:#5b21b6;line-height:1.7;display:none;}
+
+  /* Config */
+  .config-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:1rem;margin-bottom:1rem;}
+  .cfield label{display:block;font-size:.75rem;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.4rem;}
+  .cfield label .ibtn{display:inline-block;width:16px;height:16px;border-radius:50%;background:var(--border);color:var(--muted);font-size:.65rem;text-align:center;line-height:16px;cursor:pointer;margin-left:.3rem;font-style:normal;border:none;font-family:'DM Sans',sans-serif;vertical-align:middle;}
+  .cfield label .ibtn:hover{background:var(--accent2);color:white;}
+  .cfield select,.cfield input[type=text]{width:100%;padding:.55rem .8rem;border:2px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.88rem;background:var(--paper);color:var(--ink);outline:none;transition:border-color .15s;}
+  .cfield select:focus,.cfield input[type=text]:focus{border-color:var(--accent);}
+  .tooltip{display:none;background:var(--ink);color:var(--paper);font-size:.78rem;padding:.8rem 1rem;border-radius:10px;margin-top:.6rem;line-height:1.7;}
+  .tooltip.on{display:block;}
+  .fmt-toggle{display:flex;gap:.5rem;margin-top:.5rem;}
+  .fmtb{flex:1;padding:.45rem;border:2px solid var(--border);background:var(--paper);border-radius:8px;cursor:pointer;font-family:'Syne',sans-serif;font-weight:700;font-size:.78rem;text-align:center;transition:all .15s;color:var(--muted);}
+  .fmtb.active{border-color:var(--ink);background:var(--ink);color:var(--paper);}
+
+  /* Prompt */
+  .prompt-display{background:var(--paper);border:2px solid var(--border);border-radius:10px;padding:1rem;font-size:.82rem;color:var(--ink);line-height:1.7;min-height:70px;margin-bottom:.8rem;word-break:break-word;}
+  .prompt-display.empty{color:var(--muted);font-style:italic;}
+  textarea#cprompt{width:100%;padding:.9rem;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.88rem;color:var(--ink);background:var(--paper);resize:vertical;min-height:80px;outline:none;transition:border-color .15s;}
+  textarea#cprompt:focus{border-color:var(--accent2);}
+
+  /* Buttons */
+  .btn-row{display:flex;gap:.8rem;flex-wrap:wrap;margin-top:.8rem;}
+  .btn{font-family:'Syne',sans-serif;font-weight:700;font-size:.82rem;letter-spacing:.06em;text-transform:uppercase;padding:.7rem 1.4rem;border-radius:999px;border:2px solid var(--ink);background:var(--ink);color:var(--paper);cursor:pointer;transition:all .18s;text-decoration:none;display:inline-flex;align-items:center;gap:.4rem;}
+  .btn:hover{background:var(--accent);border-color:var(--accent);}
+  .btn.secondary{background:transparent;color:var(--ink);}
+  .btn.secondary:hover{background:var(--ink);color:var(--paper);}
+  .btn.purple{background:var(--accent2);border-color:var(--accent2);}
+  .btn.purple:hover{background:#5b21b6;border-color:#5b21b6;}
+  .btn.green{background:var(--green);border-color:var(--green);}
+  .btn.green:hover{background:#15803d;border-color:#15803d;}
+
+  /* Preview */
+  .preview-area{background:var(--card);border:2px solid var(--border);border-radius:16px;padding:1.5rem;text-align:center;}
+  .preview-area h2{font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;margin-bottom:1rem;text-align:left;}
+  #imgbox{width:100%;max-width:500px;min-height:300px;border-radius:12px;background:var(--paper);border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;overflow:hidden;position:relative;}
+  #rimg{width:100%;height:100%;object-fit:contain;border-radius:10px;display:none;}
+  .ph{text-align:center;color:var(--muted);padding:2rem;}
+  .ph p{font-size:.85rem;margin-top:.5rem;}
+  .lov{position:absolute;inset:0;background:rgba(245,242,238,.95);display:none;align-items:center;justify-content:center;flex-direction:column;gap:.8rem;border-radius:10px;z-index:10;}
+  .spin{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .url-box{background:var(--paper);border:2px solid var(--border);border-radius:10px;padding:.8rem 1rem;font-size:.72rem;color:var(--muted);word-break:break-all;text-align:left;margin-bottom:1rem;font-family:monospace;cursor:pointer;}
+  .url-box:hover{border-color:var(--accent2);}
+  .dlrow{display:flex;gap:.8rem;justify-content:center;flex-wrap:wrap;}
+  .error-box{background:#fff1f1;border:2px solid #fca5a5;border-radius:10px;padding:1rem;color:#991b1b;font-size:.82rem;line-height:1.6;margin-bottom:1rem;display:none;}
+
+  /* Provider toggle */
+  .provider-bar{display:flex;align-items:center;gap:.8rem;background:var(--card);border:2px solid var(--border);border-radius:12px;padding:.8rem 1.2rem;margin-bottom:1.5rem;flex-wrap:wrap;}
+  .provider-bar span{font-size:.8rem;font-weight:600;color:var(--muted);font-family:'Syne',sans-serif;text-transform:uppercase;letter-spacing:.06em;}
+  .provbtns{display:flex;gap:.4rem;flex:1;flex-wrap:wrap;}
+  .provbtn{flex:1;min-width:120px;padding:.5rem .8rem;border:2px solid var(--border);background:var(--paper);border-radius:8px;cursor:pointer;font-family:'Syne',sans-serif;font-weight:700;font-size:.78rem;text-align:center;transition:all .18s;color:var(--muted);}
+  .provbtn:hover{border-color:var(--ink);color:var(--ink);}
+  .provbtn.active{border-color:var(--ink);background:var(--ink);color:var(--paper);}
+  .provbtn.banana.active{border-color:#d97706;background:#d97706;color:white;}
+  .prov-info{font-size:.75rem;color:var(--muted);margin-top:.3rem;line-height:1.5;}
+
+  @media(max-width:600px){
+    .prompts-grid{grid-template-columns:1fr;}
+    .btn-row,.dlrow{flex-direction:column;}
+    #uprev{flex-direction:column;}
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <div class="logo">Printiflow</div>
+    <h1>Generador de <span>Imágenes IA</span></h1>
+    <p class="subtitle">100% gratis · Sin límite · Pollinations.ai <span class="badge">Free</span><span class="badge badge-purple">+ Claude AI</span><span class="badge" style="background:#fef9c3;color:#854d0e;">🍌 Nano Banana</span></p>
+  </div>
+
+  <!-- Selector de proveedor -->
+  <div class="provider-bar">
+    <span>Motor IA:</span>
+    <div class="provbtns">
+      <button class="provbtn active" id="pb-pollinations" onclick="setProvider('pollinations')">
+        🌸 Pollinations.ai
+      </button>
+      <button class="provbtn banana" id="pb-banana" onclick="setProvider('banana')">
+        🍌 Nano Banana <small style="font-weight:400;font-size:.7rem;">(necesita servidor)</small>
+      </button>
+    </div>
+    <div style="display:flex;align-items:center;gap:.6rem;margin-top:.5rem;flex-wrap:wrap;">
+      <div id="prov-desc" class="prov-info">flux-realism · Sin límite · Reintento automático si falla</div>
+      <button id="btn-puter-connect" class="btn" style="font-size:.72rem;padding:.4rem .9rem;background:#d97706;border-color:#d97706;display:none;" onclick="conectarPuter()">🔑 Conectar Puter</button>
+      <span id="puter-status" style="font-size:.75rem;display:none;"></span>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('producto')">📦 Fotos de Producto</button>
+    <button class="tab" onclick="switchTab('instagram')">📱 Posts Instagram</button>
+    <button class="tab" onclick="switchTab('banner')">🌐 Banners Web</button>
+    <button class="tab" onclick="switchTab('dtf')">🖨️ Impresiones DTF</button>
+  </div>
+
+  <div class="prompts-grid" id="pgrid"></div>
+
+  <!-- Foto de referencia -->
+  <div class="panel">
+    <h2>📸 Foto de referencia de tu producto <span class="badge badge-purple">Nuevo</span></h2>
+    <p style="font-size:.83rem;color:var(--muted);margin-bottom:1rem;">Subí una foto real de tu producto. Claude la analiza y mejora el prompt automáticamente para que el resultado se parezca más a lo que tenés.</p>
+    <div class="upload-zone" id="uzone">
+      <input type="file" id="finput" accept="image/jpeg,image/png,image/webp,image/gif" onchange="handleUpload(event)">
+      <div class="uicon">🖼️</div>
+      <p>Arrastrá tu foto aquí o <strong>hacé clic para seleccionarla</strong></p>
+      <p style="margin-top:.3rem;font-size:.75rem;">JPG · PNG · WEBP — máx. 5MB</p>
+    </div>
+    <!-- Preview de imagen subida -->
+    <div id="uprev">
+      <img id="pthumb" src="" alt="preview de producto">
+      <div class="uinfo">
+        <div class="fname" id="pname">—</div>
+        <div class="fstatus loaded" id="pstatus">✓ Imagen cargada correctamente</div>
+        <button class="btn-remove" onclick="removeImage()">✕ Quitar imagen</button>
+      </div>
+    </div>
+    <div class="ai-box" id="aibox"></div>
+  </div>
+
+  <!-- Configuración -->
+  <div class="panel">
+    <h2>⚙️ Configuración</h2>
+    <div class="config-row">
+      <div class="cfield">
+        <label>Modelo</label>
+        <select id="model">
+          <option value="flux-realism">flux-realism (recomendado)</option>
+          <option value="flux">flux (máxima calidad)</option>
+          <option value="flux-schnell">flux-schnell (rápido)</option>
+          <option value="turbo">turbo (borrador)</option>
+        </select>
+      </div>
+      <div class="cfield">
+        <label>Resolución</label>
+        <select id="format">
+          <option value="1024x1024">1024×1024 — Cuadrado (Instagram/ML)</option>
+          <option value="1200x1200">1200×1200 — Alta resolución ★</option>
+          <option value="1024x576">1024×576 — Horizontal 16:9 (Banner)</option>
+          <option value="576x1024">576×1024 — Vertical 9:16 (Story)</option>
+          <option value="1024x768">1024×768 — Rectangular (Producto)</option>
+        </select>
+      </div>
+      <div class="cfield">
+        <label>Semilla <button class="ibtn" onclick="toggleTip()">?</button></label>
+        <input type="text" id="seed" placeholder="ej: 42 (fijo) o vacío">
+        <div class="tooltip" id="stip">
+          <strong>¿Para qué sirve el seed?</strong><br>
+          Fija el resultado de la generación.<br><br>
+          • <strong>Sin seed</strong> → cada vez obtenés una imagen diferente.<br>
+          • <strong>Con seed fijo</strong> (ej: 42) → siempre el mismo resultado.<br><br>
+          Usalo cuando encontrás una imagen que te gusta y querés reproducirla.
+        </div>
+      </div>
+      <div class="cfield">
+        <label>Descarga como</label>
+        <div class="fmt-toggle">
+          <div class="fmtb active" id="fj" onclick="setFmt('jpg')">JPG</div>
+          <div class="fmtb" id="fp" onclick="setFmt('png')">PNG</div>
+        </div>
+        <p style="font-size:.7rem;color:var(--muted);margin-top:.5rem;line-height:1.5;"><strong>JPG</strong> = menor peso · <strong>PNG</strong> = máxima calidad</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Prompt -->
+  <div class="panel">
+    <h2>✏️ Prompt generado / personalizado</h2>
+    <div class="prompt-display empty" id="pdisplay">Seleccioná una plantilla arriba o escribí tu propio prompt...</div>
+    <textarea id="cprompt" placeholder="Escribí aquí tu descripción personalizada (en inglés da mejores resultados)..."></textarea>
+    <div class="btn-row">
+      <button class="btn" onclick="generateImage()">⚡ Generar imagen</button>
+      <button class="btn purple" id="btnai" style="display:none" onclick="analyzeAndGenerate()">🤖 Analizar foto y generar</button>
+      <button class="btn secondary" onclick="copyUrl()">📋 Copiar URL</button>
+      <button class="btn secondary" onclick="openBrowser()">🔗 Abrir en navegador</button>
+    </div>
+  </div>
+
+  <!-- Preview -->
+  <div class="preview-area">
+    <h2>🖼️ Vista previa</h2>
+    <div class="error-box" id="errbox">
+      <strong>⚠️ <span id="errtitle">No se pudo generar la imagen.</span></strong><br>
+      <span id="errmsg">El servidor tuvo un error momentáneo. Intentá de nuevo en unos segundos.</span>
+      <div style="margin-top:.7rem;display:flex;gap:.6rem;flex-wrap:wrap;">
+        <button class="btn" style="font-size:.75rem;padding:.5rem 1rem;" onclick="retryGen()">🔄 Reintentar</button>
+        <button class="btn secondary" style="font-size:.75rem;padding:.5rem 1rem;" onclick="switchProviderAndRetry()">🌸 Intentar con Pollinations</button>
+      </div>
+    </div>
+    <div id="imgbox">
+      <div class="lov" id="lov">
+        <div class="spin"></div>
+        <p style="font-size:.8rem;color:var(--muted)" id="lovtxt">Generando imagen...</p>
+      </div>
+      <div class="ph" id="ph">
+        <div style="font-size:2.5rem">🎨</div>
+        <p>Tu imagen aparecerá aquí</p>
+      </div>
+      <img id="rimg" alt="Imagen generada">
+    </div>
+    <div class="url-box" id="urlbox" onclick="copyUrlDirect()" title="Clic para copiar URL">La URL de la imagen aparecerá aquí — clic para copiar</div>
+    <div class="dlrow">
+      <button id="dljpg" class="btn green" style="display:none" onclick="dlImg('jpg')">⬇️ Descargar JPG</button>
+      <button id="dlpng" class="btn green" style="display:none" onclick="dlImg('png')">⬇️ Descargar PNG</button>
+      <button id="dlopenb" class="btn secondary" style="display:none" onclick="window.open(curUrl,'_blank')">🔗 Abrir en navegador</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const P={
+  producto:[
+    {tag:"Mercado Libre",title:"Remera fondo blanco",desc:"Foto de catálogo para ML",prompt:"professional product photo of a white cotton t-shirt with colorful DTF print design, flat lay, pure white background, studio lighting, sharp focus, e-commerce style, commercial photography, 8k resolution, centered composition, no shadows"},
+    {tag:"Lifestyle",title:"Remera con modelo",desc:"Persona usando la remera",prompt:"young latin american person wearing a white t-shirt with colorful graphic print, street style, natural daylight, urban background slightly blurred, casual fashion photography, vibrant colors, high quality DSLR photo"},
+    {tag:"Pack",title:"Remeras apiladas",desc:"Variedad de diseños",prompt:"multiple folded t-shirts stacked neatly, various colorful DTF prints visible, flat lay top view, white background, professional product photography, e-commerce style, clean minimalist studio lighting"},
+    {tag:"Buzo",title:"Buzo estampado",desc:"Ghost mannequin style",prompt:"professional product photo of a black hoodie sweatshirt with colorful DTF print on chest, ghost mannequin style, pure white background, studio lighting, sharp focus, clothing e-commerce photography, 8k quality"},
+    {tag:"Detalle",title:"Detalle de estampado",desc:"Close-up del DTF",prompt:"macro close up detail of vibrant DTF heat transfer print on white cotton fabric, texture visible, sharp focus, studio lighting, product photography detail shot, high resolution, color accuracy"},
+  ],
+  instagram:[
+    {tag:"Nuevo diseño",title:"Showcase de diseño",desc:"Post presentación",prompt:"modern Instagram post layout, colorful graphic t-shirt design showcase, vibrant background with soft pastel gradient, centered product, space for text top and bottom, clean minimalist style, high contrast colors, social media marketing, square format"},
+    {tag:"Promo",title:"Post de oferta",desc:"Banner promocional",prompt:"bold promotional social media graphic, bright eye-catching colors, discount sale concept for custom printed apparel, dynamic layout with space for price text, modern graphic design style, energetic youthful aesthetic, Instagram square format"},
+    {tag:"Behind the scenes",title:"Proceso de impresión",desc:"Contenido auténtico",prompt:"close up photo of DTF heat transfer printing process on fabric, colorful ink transfer film on textile, warm workshop lighting, detailed texture, authentic manufacturing photography, social media content"},
+    {tag:"Capibaras",title:"Stickers capibaras",desc:"Pack de capibaras",prompt:"cute capybara character illustration, flat design style, bright pastel colors, sticker sheet layout with multiple poses, white background, fun playful merchandise print ready design, high resolution, kawaii style"},
+    {tag:"Carrusel",title:"Cover carrusel",desc:"Portada de carrusel",prompt:"Instagram carousel cover image, modern streetwear brand aesthetic, dark background with vibrant neon accent colors, multiple clothing items floating, fashion editorial style, bold typography space at top, square format, high energy"},
+  ],
+  banner:[
+    {tag:"Hero",title:"Banner principal",desc:"Página de inicio",prompt:"wide hero banner for custom printing ecommerce, colorful DTF printed t-shirts and hoodies arranged dynamically, modern clean design, white and vibrant color palette, space for headline text on left side, professional marketing visual, high resolution"},
+    {tag:"Proceso",title:"Cómo funciona",desc:"Pasos del servicio",prompt:"step by step infographic banner for custom t-shirt printing service, icons showing design upload print deliver process, clean flat design, blue and white color scheme, modern professional style, wide horizontal format"},
+    {tag:"Categoría",title:"Banner remeras",desc:"Categoría de producto",prompt:"product category banner for t-shirt collection, multiple colorful tees on hangers, bright studio background, modern retail aesthetic, space for category title text overlay, wide horizontal format"},
+    {tag:"Contacto",title:"Banner WhatsApp",desc:"Banner de contacto",prompt:"modern contact banner for small business printing shop, friendly illustration of person with phone and message bubbles, warm approachable design, green white color scheme, horizontal format, clean minimalist, professional"},
+  ],
+  dtf:[
+    {tag:"Film DTF",title:"Lámina DTF lista",desc:"Film impreso sobre papel",prompt:"professional macro photo of a DTF transfer film sheet with vibrant colorful printed design on clear transfer paper, ready to press, studio lighting, white background, high detail, product photography, sharp focus, print industry"},
+    {tag:"Proceso calor",title:"Prensado con calor",desc:"Transfer aplicado en remera",prompt:"close up photo of heat press machine applying DTF transfer to white cotton t-shirt, steam, warm light, professional printing workshop, industrial equipment, authentic photography, textile manufacturing process"},
+    {tag:"Detalle tinta",title:"Tinta sobre tela",desc:"Textura del DTF en la prenda",prompt:"extreme macro close up of vibrant DTF print on white cotton fabric, ink texture visible, vivid colors, sharp focus, studio lighting, textile detail photography, high resolution, color fidelity"},
+    {tag:"Pack diseños",title:"Pack de films DTF",desc:"Varios diseños en una hoja",prompt:"flat lay of multiple DTF printed transfer film sheets arranged neatly, various colorful graphic designs, white background, top view, professional product photography, print studio, clean composition"},
+    {tag:"Antes/Después",title:"Transfer vs resultado",desc:"Film y prenda final",prompt:"side by side comparison of DTF transfer film and finished printed t-shirt, professional studio photography, white background, clean layout, print quality showcase, commercial product photography"},
+    {tag:"Full color",title:"Estampado full color",desc:"Diseño fotorrealista en tela",prompt:"photorealistic full color DTF print on black hoodie, detailed photographic design visible on fabric, close up, studio lighting, fashion product photography, vibrant colors on dark textile, sharp quality"},
+  ]
+};
+
+let tab='producto', sel=null, b64=null, btype=null, bname=null, dlFmt='jpg', curUrl=null;
+let curBlob=null, lastPrompt=null, curProvider='pollinations';
+
+// ── Tabs ──
+function switchTab(t){
+  tab=t; sel=null;
+  document.querySelectorAll('.tab').forEach((el,i)=>el.classList.toggle('active',['producto','instagram','banner','dtf'][i]===t));
+  render(); resetPD();
+}
+function render(){
+  const g=document.getElementById('pgrid'); g.innerHTML='';
+  P[tab].forEach((p,i)=>{
+    const c=document.createElement('div');
+    c.className='prompt-card'+(sel===i?' selected':'');
+    c.innerHTML=`<div class="check">✓</div><div class="tag">${p.tag}</div><h3>${p.title}</h3><p>${p.desc}</p>`;
+    c.onclick=()=>pick(i);
+    g.appendChild(c);
+  });
+}
+function pick(i){
+  sel=i; render();
+  const d=document.getElementById('pdisplay');
+  d.textContent=P[tab][i].prompt; d.classList.remove('empty');
+  document.getElementById('cprompt').value='';
+}
+function resetPD(){
+  const d=document.getElementById('pdisplay');
+  d.textContent='Seleccioná una plantilla arriba o escribí tu propio prompt...';
+  d.classList.add('empty');
+}
+function getPrompt(){
+  const c=document.getElementById('cprompt').value.trim();
+  return c || (sel!==null ? P[tab][sel].prompt : null);
+}
+
+// ── Provider ──
+let puterReady = false;
+
+async function checkPuterSession(){
+  if(typeof puter === 'undefined') return;
+  try{
+    const isSignedIn = await puter.auth.isSignedIn();
+    const statusEl = document.getElementById('puter-status');
+    const connectBtn = document.getElementById('btn-puter-connect');
+    if(isSignedIn){
+      puterReady = true;
+      statusEl.innerHTML = '✅ Puter conectado';
+      statusEl.style.color = 'var(--green)';
+      statusEl.style.display = 'inline';
+      connectBtn.style.display = 'none';
+    } else {
+      puterReady = false;
+      statusEl.innerHTML = '⚠️ No conectado';
+      statusEl.style.color = '#d97706';
+      statusEl.style.display = 'inline';
+      connectBtn.style.display = 'inline-flex';
+    }
+  } catch(e){ /* puter aún no cargó */ }
+}
+
+async function conectarPuter(){
+  const btn = document.getElementById('btn-puter-connect');
+  const statusEl = document.getElementById('puter-status');
+  btn.textContent = '⏳ Conectando...';
+  btn.disabled = true;
+  // Intentar generar una imagen de prueba para forzar el login de Puter
+  try{
+    if(typeof puter === 'undefined') throw new Error('Puter no cargó');
+    await puter.ai.txt2img('test', { model: 'gemini-2.5-flash-image-preview' });
+    puterReady = true;
+    statusEl.innerHTML = '✅ Puter conectado';
+    statusEl.style.color = 'var(--green)';
+    btn.style.display = 'none';
+  } catch(e){
+    // Si el login funcionó pero la imagen falló, igual quedó autenticado
+    await checkPuterSession();
+    btn.textContent = '🔑 Conectar Puter';
+    btn.disabled = false;
+  }
+}
+
+function setProvider(p){
+  curProvider = p;
+  document.getElementById('pb-pollinations').classList.toggle('active', p==='pollinations');
+  document.getElementById('pb-banana').classList.toggle('active', p==='banana');
+  const desc = document.getElementById('prov-desc');
+  const connectBtn = document.getElementById('btn-puter-connect');
+  const statusEl = document.getElementById('puter-status');
+  if(p==='pollinations'){
+    desc.textContent = 'flux-realism · Sin límite · A veces lento en horas pico';
+    connectBtn.style.display = 'none';
+    statusEl.style.display = 'none';
+    document.getElementById('model').closest('.cfield').style.opacity='1';
+    document.getElementById('model').closest('.cfield').style.pointerEvents='auto';
+  } else {
+    desc.textContent = '🍌 Gemini 2.5 Flash Image · Google AI · Más estable';
+    document.getElementById('model').closest('.cfield').style.opacity='.4';
+    document.getElementById('model').closest('.cfield').style.pointerEvents='none';
+    checkPuterSession();
+  }
+}
+
+// ── Config ──
+function buildUrl(p){
+  const m=document.getElementById('model').value;
+  const f=document.getElementById('format').value;
+  const s=document.getElementById('seed').value.trim();
+  const[w,h]=f.split('x');
+  let u=`https://image.pollinations.ai/prompt/${encodeURIComponent(p)}?width=${w}&height=${h}&model=${m}&nologo=true&enhance=true`;
+  if(s) u+=`&seed=${s}`;
+  return u;
+}
+function toggleTip(){ document.getElementById('stip').classList.toggle('on'); }
+function setFmt(f){
+  dlFmt=f;
+  document.getElementById('fj').classList.toggle('active',f==='jpg');
+  document.getElementById('fp').classList.toggle('active',f==='png');
+}
+
+// ── Upload ──
+function handleUpload(e){
+  const file = e.target ? e.target.files[0] : e;
+  if(!file) return;
+  if(file.size > 5*1024*1024){ alert('La imagen debe ser menor a 5MB.'); return; }
+
+  const reader = new FileReader();
+  reader.onload = function(ev){
+    const dataUrl = ev.target.result;
+    // Guardar datos
+    b64 = dataUrl.split(',')[1];
+    btype = file.type || 'image/jpeg';
+    bname = file.name;
+
+    // Mostrar preview — método directo y robusto
+    const thumb = document.getElementById('pthumb');
+    const nameEl = document.getElementById('pname');
+    const statusEl = document.getElementById('pstatus');
+    const prevBox = document.getElementById('uprev');
+
+    thumb.src = dataUrl;
+    nameEl.textContent = file.name;
+    statusEl.textContent = '✓ Imagen cargada correctamente';
+    statusEl.className = 'fstatus loaded';
+
+    // Forzar display flex con !important override via style
+    prevBox.style.cssText = 'display:flex !important; flex-direction:row; gap:1rem; align-items:flex-start; margin-top:1rem; padding:1rem; background:#faf5ff; border:2px solid #ddd6fe; border-radius:12px;';
+
+    // Mostrar botón de análisis
+    document.getElementById('btnai').style.display = 'inline-flex';
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeImage(){
+  b64=null; btype=null; bname=null;
+  const prevBox = document.getElementById('uprev');
+  prevBox.style.cssText = 'display:none';
+  document.getElementById('aibox').style.display='none';
+  document.getElementById('btnai').style.display='none';
+  document.getElementById('finput').value='';
+  document.getElementById('pthumb').src='';
+}
+
+// ── Análisis con Claude ──
+async function analyzeAndGenerate(){
+  const base=getPrompt();
+  if(!base){ alert('Seleccioná una plantilla primero.'); return; }
+  if(!b64){ alert('Primero subí una foto de tu producto.'); return; }
+
+  const st=document.getElementById('pstatus');
+  const ab=document.getElementById('aibox');
+  st.textContent='🔍 Claude analizando tu producto...';
+  st.className='fstatus analyzing';
+  ab.style.display='none';
+
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        messages:[{
+          role:'user',
+          content:[
+            {type:'image',source:{type:'base64',media_type:btype,data:b64}},
+            {type:'text',text:`Sos un experto en fotografía de producto para e-commerce de impresión DTF en Argentina. Analizá la imagen adjunta y mejorá este prompt para Pollinations.ai (flux-realism):\n\nPrompt base: "${base}"\n\nInstrucciones:\n- Describí el producto que ves: colores exactos, tipo de prenda, diseño estampado, texturas, estilo\n- Combiná esa descripción específica con el prompt base\n- Devolvé ÚNICAMENTE el prompt mejorado en inglés, sin explicaciones ni comillas, máximo 120 palabras`}
+          ]
+        }]
+      })
+    });
+    const data=await res.json();
+    const imp=data.content?.[0]?.text?.trim();
+    if(imp){
+      st.textContent='✓ Análisis completado';
+      st.className='fstatus done';
+      ab.innerHTML=`<strong>Prompt mejorado por Claude:</strong><br><br>${imp}`;
+      ab.style.display='block';
+      document.getElementById('pdisplay').textContent=imp;
+      document.getElementById('pdisplay').classList.remove('empty');
+      document.getElementById('cprompt').value=imp;
+      runGen(imp);
+    } else { throw new Error('Sin respuesta'); }
+  } catch(err){
+    st.textContent='✓ Imagen cargada (generando con prompt original)';
+    st.className='fstatus loaded';
+    generateImage();
+  }
+}
+
+// ── Helpers de error ──
+function showError(title, msg){
+  document.getElementById('lov').style.display='none';
+  document.getElementById('ph').style.display='none';
+  document.getElementById('errbox').style.display='block';
+  document.getElementById('errtitle').textContent = title || 'No se pudo generar la imagen.';
+  document.getElementById('errmsg').textContent = msg || 'El servidor tuvo un error. Intentá de nuevo.';
+  document.getElementById('dlopenb').style.display='inline-flex';
+  // Ocultar botón Nano Banana si ya estamos usándolo
+  const nb = document.getElementById('errbox').querySelector('button:last-child');
+  if(nb) nb.style.display = curProvider==='pollinations' ? 'none' : 'inline-flex';
+}
+function retryGen(){ if(lastPrompt) runGen(lastPrompt); }
+function switchProviderAndRetry(){ setProvider('pollinations'); if(lastPrompt) runGen(lastPrompt); }
+
+// ── Mostrar imagen desde blob ──
+function showImageBlob(blob){
+  curBlob = blob;
+  const blobUrl = URL.createObjectURL(blob);
+  const img = document.getElementById('rimg');
+  img.onload = function(){
+    document.getElementById('lov').style.display='none';
+    img.style.display='block';
+    document.getElementById('dljpg').style.display='inline-flex';
+    document.getElementById('dlpng').style.display='inline-flex';
+    document.getElementById('dlopenb').style.display='inline-flex';
+  };
+  img.src = blobUrl;
+}
+
+// ── Generación ──
+function generateImage(){
+  const p=getPrompt();
+  if(!p){ alert('Seleccioná una plantilla o escribí un prompt primero.'); return; }
+  runGen(p);
+}
+
+async function runGen(p){
+  curBlob = null;
+  lastPrompt = p;
+
+  // UI reset
+  document.getElementById('errbox').style.display='none';
+  document.getElementById('lov').style.display='flex';
+  document.getElementById('rimg').style.display='none';
+  document.getElementById('ph').style.display='none';
+  document.getElementById('dljpg').style.display='none';
+  document.getElementById('dlpng').style.display='none';
+  document.getElementById('dlopenb').style.display='none';
+
+  if(curProvider === 'banana'){
+    await runGenBanana(p);
+  } else {
+    await runGenPollinations(p);
+  }
+}
+
+// ── Generación con Pollinations (fetch + reintentos automáticos) ──
+async function runGenPollinations(p){
+  const url = buildUrl(p);
+  curUrl = url;
+  document.getElementById('urlbox').textContent = url;
+
+  const MAX_RETRIES = 3;
+  for(let attempt = 1; attempt <= MAX_RETRIES; attempt++){
+    try{
+      const label = attempt > 1 ? `Reintentando (${attempt}/${MAX_RETRIES})...` : 'Generando con Pollinations... (10-30 seg)';
+      document.getElementById('lovtxt').textContent = label;
+
+      const res = await fetch(url + '&t=' + Date.now());
+
+      if(!res.ok){
+        if(attempt < MAX_RETRIES){
+          await new Promise(r => setTimeout(r, 2000)); // esperar 2s antes de reintentar
+          continue;
+        }
+        showError('Error de Pollinations ('+res.status+')', 'Falló después de '+MAX_RETRIES+' intentos. Probá de nuevo en unos minutos.');
+        return;
+      }
+
+      const ct = res.headers.get('content-type') || '';
+      if(!ct.startsWith('image/')){
+        if(attempt < MAX_RETRIES){
+          await new Promise(r => setTimeout(r, 2000));
+          continue;
+        }
+        showError('Error al generar', 'Pollinations no pudo generar la imagen. Reintentá más tarde.');
+        return;
+      }
+
+      // ✅ Éxito
+      document.getElementById('lovtxt').textContent = 'Procesando imagen...';
+      const blob = await res.blob();
+      showImageBlob(blob);
+      return;
+
+    } catch(err){
+      if(attempt < MAX_RETRIES){
+        await new Promise(r => setTimeout(r, 2000));
+        continue;
+      }
+      showError('Error de conexión', 'No se pudo conectar con Pollinations después de '+MAX_RETRIES+' intentos.');
+    }
+  }
+}
+
+// ── Generación con Nano Banana ──
+async function runGenBanana(p){
+  curUrl = null;
+  document.getElementById('urlbox').textContent = '🍌 Nano Banana (Gemini 2.5 Flash Image) — generando...';
+  document.getElementById('lovtxt').textContent = '🍌 Generando con Nano Banana... (15-40 seg)';
+
+  try{
+    if(typeof puter === 'undefined'){
+      showError('Puter.js no cargó', 'Recargá la página e intentá de nuevo.');
+      return;
+    }
+
+    // txt2img maneja el auth internamente — si necesita login abre su propio popup
+    const imgEl = await puter.ai.txt2img(p, {
+      model: 'gemini-2.5-flash-image-preview'
+    });
+
+    if(!imgEl || !imgEl.src){
+      showError('Sin respuesta de Nano Banana', 'No se recibió imagen. Reintentá o usá Pollinations.');
+      return;
+    }
+
+    document.getElementById('lovtxt').textContent = 'Procesando imagen...';
+    const res = await fetch(imgEl.src);
+    const blob = await res.blob();
+    curBlob = blob;
+    puterReady = true;
+    checkPuterSession();
+    document.getElementById('urlbox').textContent = '🍌 Nano Banana — imagen generada con Gemini 2.5 Flash Image';
+    showImageBlob(blob);
+
+  } catch(err){
+    const msg = err?.message || String(err);
+    showError('Error con Nano Banana', msg || 'No se pudo generar. Reintentá o usá 🌸 Pollinations.');
+  }
+}
+
+// ── Descarga (usa blob guardado) ──
+async function dlImg(fmt){
+  if(!curBlob && !curUrl){ alert('No hay imagen para descargar.'); return; }
+
+  try{
+    let blob = curBlob;
+
+    if(!blob && curUrl){
+      document.getElementById('lovtxt').textContent = `Descargando ${fmt.toUpperCase()}...`;
+      document.getElementById('lov').style.display='flex';
+      const res = await fetch(curUrl);
+      if(!res.ok) throw new Error('fetch');
+      blob = await res.blob();
+      document.getElementById('lov').style.display='none';
+    }
+
+    if(fmt==='jpg' && blob.type !== 'image/jpeg'){
+      const bmp = await createImageBitmap(blob);
+      const cv = document.createElement('canvas');
+      cv.width=bmp.width; cv.height=bmp.height;
+      cv.getContext('2d').drawImage(bmp,0,0);
+      cv.toBlob(jpgBlob=>{
+        const a=document.createElement('a');
+        a.href=URL.createObjectURL(jpgBlob);
+        a.download='printiflow.jpg'; a.click();
+      },'image/jpeg',0.95);
+    } else {
+      const a=document.createElement('a');
+      a.href=URL.createObjectURL(blob);
+      a.download=`printiflow.${fmt}`; a.click();
+    }
+  } catch(e){
+    if(curUrl) window.open(curUrl,'_blank');
+    else alert('No se pudo descargar. Intentá de nuevo.');
+  }
+}
+
+// ── Utils ──
+function copyUrl(){
+  const p=getPrompt();
+  if(!p){ alert('Seleccioná o escribí un prompt primero.'); return; }
+  navigator.clipboard.writeText(buildUrl(p)).then(()=>alert('URL copiada ✅'));
+}
+function copyUrlDirect(){
+  if(!curUrl) return;
+  navigator.clipboard.writeText(curUrl).then(()=>{
+    const b=document.getElementById('urlbox');
+    const orig=b.style.background;
+    b.style.background='#dcfce7';
+    setTimeout(()=>b.style.background=orig,600);
+  });
+}
+function openBrowser(){
+  const p=getPrompt();
+  if(!p){ alert('Seleccioná o escribí un prompt primero.'); return; }
+  window.open(buildUrl(p),'_blank');
+}
+
+// Escucha de custom-prompt
+document.getElementById('cprompt').addEventListener('input',function(){
+  const d=document.getElementById('pdisplay');
+  if(this.value.trim()){d.textContent=this.value.trim();d.classList.remove('empty');sel=null;render();}
+  else resetPD();
+});
+
+// Drag & drop
+const uz=document.getElementById('uzone');
+uz.addEventListener('dragover',e=>{e.preventDefault();uz.classList.add('dragover');});
+uz.addEventListener('dragleave',()=>uz.classList.remove('dragover'));
+uz.addEventListener('drop',e=>{
+  e.preventDefault(); uz.classList.remove('dragover');
+  const f=e.dataTransfer.files[0];
+  if(f&&f.type.startsWith('image/')) handleUpload({target:{files:[f]}});
+});
+
+render();
+
+// Verificar sesión de Puter al cargar
+window.addEventListener('load', ()=>{
+  setTimeout(checkPuterSession, 1500);
+});
+</script>
+</body>
+</html>
