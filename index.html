@@ -882,7 +882,7 @@ function getEditPrompt(){
   return custom || editSelectedPrompt;
 }
 
-// ── Editar imagen con Nano Banana (Gemini via Puter.js) ──
+// ── Editar imagen: Claude analiza → Nano Banana genera ──
 async function editImage(){
   if(!editB64){ alert('Primero subí una foto para editar.'); return; }
   const prompt = getEditPrompt();
@@ -904,22 +904,43 @@ async function editImage(){
   panel.scrollIntoView({behavior:'smooth', block:'nearest'});
 
   try{
-    if(typeof puter === 'undefined') throw new Error('Puter.js no cargó. Recargá la página.');
+    // Paso 1: Claude analiza la imagen y crea prompt detallado
+    document.getElementById('edit-lovtxt').textContent='🤖 Claude analizando tu foto...';
 
-    document.getElementById('edit-lovtxt').textContent='🍌 Nano Banana editando tu imagen... (20-50 seg)';
-
-    // Nano Banana (Gemini) acepta imagen como data URL directamente
-    const dataUrl = `data:${editBtype};base64,${editB64}`;
-
-    const result = await puter.ai.txt2img(prompt, {
-      model: 'gemini-2.5-flash-image-preview',
-      image_url: dataUrl
+    const claudeRes = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:200,
+        messages:[{
+          role:'user',
+          content:[
+            {type:'image', source:{type:'base64', media_type:editBtype, data:editB64}},
+            {type:'text', text:`Analizá esta imagen de producto y creá un prompt para generarla con esta modificación: "${prompt}".
+Describí exactamente: tipo de prenda, color, diseño estampado, y aplicá la edición pedida.
+Devolvé SOLO el prompt en inglés, sin explicaciones, máximo 80 palabras.`}
+          ]
+        }]
+      })
     });
 
-    if(!result || !result.src) throw new Error('Nano Banana no devolvió imagen. Reintentá.');
+    const claudeData = await claudeRes.json();
+    const improvedPrompt = claudeData.content?.[0]?.text?.trim();
+    if(!improvedPrompt) throw new Error('Claude no pudo analizar la imagen.');
 
-    editBlob = null;
-    const fetchRes = await fetch(result.src);
+    // Paso 2: Generar con Nano Banana usando el prompt de Claude
+    document.getElementById('edit-lovtxt').textContent='🍌 Nano Banana generando resultado...';
+
+    if(typeof puter === 'undefined') throw new Error('Puter.js no cargó.');
+
+    const imgEl = await puter.ai.txt2img(improvedPrompt, {
+      model: 'gemini-2.5-flash-image-preview'
+    });
+
+    if(!imgEl || !imgEl.src) throw new Error('Nano Banana no devolvió imagen.');
+
+    const fetchRes = await fetch(imgEl.src);
     editBlob = await fetchRes.blob();
     const blobUrl = URL.createObjectURL(editBlob);
 
@@ -937,9 +958,7 @@ async function editImage(){
     const div = errEl.querySelector('div');
     if(div) div.style.display='flex';
     document.getElementById('edit-errtitle').textContent='Error al editar';
-    const msg = err?.message || String(err);
-    document.getElementById('edit-errmsg').textContent = msg.length > 150 ? msg.substring(0,150)+'...' : msg;
-    console.error('Edit error:', err);
+    document.getElementById('edit-errmsg').textContent = err?.message || 'No se pudo editar. Reintentá.';
   }
 }
 
