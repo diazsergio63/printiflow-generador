@@ -170,8 +170,7 @@
     </div>
     <div style="display:flex;align-items:center;gap:.6rem;margin-top:.5rem;flex-wrap:wrap;">
       <div id="prov-desc" class="prov-info">flux-realism · Sin límite · Reintento automático si falla</div>
-      <button id="btn-puter-connect" class="btn" style="font-size:.72rem;padding:.4rem .9rem;background:#d97706;border-color:#d97706;display:none;" onclick="conectarPuter()">🔑 Conectar Puter</button>
-      <span id="puter-status" style="font-size:.75rem;display:none;"></span>
+      <button id="btn-puter-connect" class="btn" style="font-size:.72rem;padding:.4rem .9rem;background:#d97706;border-color:#d97706;display:none;" onclick="window.open('https://puter.com','_blank')">🔑 Ir a puter.com</button>
     </div>
   </div>
 
@@ -470,47 +469,15 @@ function getPrompt(){
 // ── Provider ──
 let puterReady = false;
 
-async function checkPuterSession(){
-  if(typeof puter === 'undefined') return;
-  try{
-    const isSignedIn = await puter.auth.isSignedIn();
-    const statusEl = document.getElementById('puter-status');
-    const connectBtn = document.getElementById('btn-puter-connect');
-    if(isSignedIn){
-      puterReady = true;
-      statusEl.innerHTML = '✅ Puter conectado';
-      statusEl.style.color = 'var(--green)';
-      statusEl.style.display = 'inline';
-      connectBtn.style.display = 'none';
-    } else {
-      puterReady = false;
-      statusEl.innerHTML = '⚠️ No conectado';
-      statusEl.style.color = '#d97706';
-      statusEl.style.display = 'inline';
-      connectBtn.style.display = 'inline-flex';
-    }
-  } catch(e){ /* puter aún no cargó */ }
-}
+async function checkPuterSession(){ /* sesión manejada internamente por Puter */ }
 
 async function conectarPuter(){
-  const btn = document.getElementById('btn-puter-connect');
-  const statusEl = document.getElementById('puter-status');
-  btn.textContent = '⏳ Conectando...';
-  btn.disabled = true;
-  // Intentar generar una imagen de prueba para forzar el login de Puter
-  try{
-    if(typeof puter === 'undefined') throw new Error('Puter no cargó');
-    await puter.ai.txt2img('test', { model: 'gemini-2.5-flash-image-preview' });
-    puterReady = true;
-    statusEl.innerHTML = '✅ Puter conectado';
-    statusEl.style.color = 'var(--green)';
-    btn.style.display = 'none';
-  } catch(e){
-    // Si el login funcionó pero la imagen falló, igual quedó autenticado
-    await checkPuterSession();
-    btn.textContent = '🔑 Conectar Puter';
-    btn.disabled = false;
-  }
+  window.open('https://puter.com', '_blank');
+}
+
+async function verificarSesionPuter(){ 
+  document.getElementById('puter-status').innerHTML = '✅ Listo, intentá generar';
+  document.getElementById('puter-status').style.color = 'var(--green)';
 }
 
 function setProvider(p){
@@ -518,19 +485,14 @@ function setProvider(p){
   document.getElementById('pb-pollinations').classList.toggle('active', p==='pollinations');
   document.getElementById('pb-banana').classList.toggle('active', p==='banana');
   const desc = document.getElementById('prov-desc');
-  const connectBtn = document.getElementById('btn-puter-connect');
-  const statusEl = document.getElementById('puter-status');
   if(p==='pollinations'){
-    desc.textContent = 'flux-realism · Sin límite · A veces lento en horas pico';
-    connectBtn.style.display = 'none';
-    statusEl.style.display = 'none';
+    desc.textContent = 'flux-realism · Sin límite · Reintento automático si falla';
     document.getElementById('model').closest('.cfield').style.opacity='1';
     document.getElementById('model').closest('.cfield').style.pointerEvents='auto';
   } else {
-    desc.textContent = '🍌 Gemini 2.5 Flash Image · Google AI · Más estable';
+    desc.textContent = '🍌 Gemini 2.5 Flash Image · Google AI · Login automático al generar';
     document.getElementById('model').closest('.cfield').style.opacity='.4';
     document.getElementById('model').closest('.cfield').style.pointerEvents='none';
-    checkPuterSession();
   }
 }
 
